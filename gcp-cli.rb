@@ -6,20 +6,20 @@ class GcpCli < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/kmoneil/gcp-cli/releases/download/v0.3.0/gcp-cli-darwin-arm64"
-      sha256 "0c55a78339ed25889492784bc1e425fd748b65ddf249c71b8c7a4039cea119f0"
+      sha256 "eead28098f65f383399318bcce6e1a3892e01ed8d42f63d808238c45dbb32262"
     else
       url "https://github.com/kmoneil/gcp-cli/releases/download/v0.3.0/gcp-cli-darwin-amd64"
-      sha256 "bb4146bb38e81455608d93d0839f420b1bc82ecc7532e7a222f9ed4b933f5aac"
+      sha256 "07df80981a08c5affa971ca1069de584dfc750442380ed5fccf76ab7a7ca2440"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
       url "https://github.com/kmoneil/gcp-cli/releases/download/v0.3.0/gcp-cli-linux-arm64"
-      sha256 "9c925fe356d8fac706db222f644c70dae68fed22703b486df43bb02c1ea495d6"
+      sha256 "f399df30a77cd5292cb3a1d7c9f9bbf80507e301c97b7a10490add7c8f5218b8"
     else
       url "https://github.com/kmoneil/gcp-cli/releases/download/v0.3.0/gcp-cli-linux-amd64"
-      sha256 "9f5891e17554508c2317dd195e066180b67e36af9b61e776d66000f2d6199a4d"
+      sha256 "3f336be7591771fd0442e42b64517a6cd77eb0a63d81c5269ba3db909d0c7a85"
     end
   end
 
