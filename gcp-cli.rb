@@ -1,25 +1,25 @@
 class GcpCli < Formula
   desc "LLM-native Google Cloud CLI"
   homepage "https://github.com/kmoneil/gcp-cli"
-  version "0.5.0"
+  version "0.6.0"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/gcp-cli/releases/download/v0.5.0/gcp-cli-darwin-arm64"
-      sha256 "f6557b0a06c280353193ff77bc579e2753794ff835c7423b652a0a34ff1e0ad4"
+      url "https://github.com/kmoneil/gcp-cli/releases/download/v0.6.0/gcp-cli-darwin-arm64"
+      sha256 "caae9b18377da3682799d5e95e0b8e04384c8e9f43ea9ad9a9b6bd2c13622e02"
     else
-      url "https://github.com/kmoneil/gcp-cli/releases/download/v0.5.0/gcp-cli-darwin-amd64"
-      sha256 "a24a9e14089dedbc304bdcb2e441be33eb063a4fe25607b2a29534c19e0baa3d"
+      url "https://github.com/kmoneil/gcp-cli/releases/download/v0.6.0/gcp-cli-darwin-amd64"
+      sha256 "24b72158976421c7e9f3a77d0fa59c772489a4ac333dbe3a9eed4fadf249627b"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/gcp-cli/releases/download/v0.5.0/gcp-cli-linux-arm64"
-      sha256 "e09c18f289c350f8055eb7e974af7bf883a15b26aec155a89772b3cb1dcbb915"
+      url "https://github.com/kmoneil/gcp-cli/releases/download/v0.6.0/gcp-cli-linux-arm64"
+      sha256 "fc1fb69820f8fa03e1148e480b7938ec1aa231d14f68893ca3a10db5a346d2ad"
     else
-      url "https://github.com/kmoneil/gcp-cli/releases/download/v0.5.0/gcp-cli-linux-amd64"
-      sha256 "89c520a4ff7dd0a17d124c5af4fca52729215cec422a3ab9dbbc2fca813774d0"
+      url "https://github.com/kmoneil/gcp-cli/releases/download/v0.6.0/gcp-cli-linux-amd64"
+      sha256 "f2926933370242aa9b8003fe0cfeacc9c364ac8efcd0a11bfa0f478f997be615"
     end
   end
 
