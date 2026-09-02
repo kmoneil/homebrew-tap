@@ -1,8 +1,12 @@
 class Jr < Formula
   desc "Jira client whose output is a versioned contract, for scripts and agents"
   homepage "https://github.com/kmoneil/jr"
-  version "0.10.1"
   license "Apache-2.0"
+
+  # No `version` stanza. Homebrew scans it out of the release URL, and `brew
+  # audit` refuses a declaration that agrees with what it already scanned:
+  # "version 0.10.1 is redundant with version scanned from URL". gcp-cli.rb
+  # declares one because its URLs name a bare binary with no version in it.
 
   livecheck do
     url :stable
