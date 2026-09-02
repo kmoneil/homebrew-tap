@@ -4,6 +4,11 @@ class Jr < Formula
   version "0.10.1"
   license "Apache-2.0"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   # This is the full profile. Every release also carries jr-agent, jr-reader and
   # jr-ci, which are the same tool with capabilities compiled out rather than
   # switched off. They are deliberately not in this tap: the machine running
@@ -29,11 +34,6 @@ class Jr < Formula
       url "https://github.com/kmoneil/jr/releases/download/v0.10.1/jr-full_0.10.1_linux_amd64.tar.gz"
       sha256 "fd87edc40b98ce03fbb0bdd4d6f7461f43d0edc358035159ffd013ef3d2a7e41"
     end
-  end
-
-  livecheck do
-    url :stable
-    strategy :github_latest
   end
 
   def install
