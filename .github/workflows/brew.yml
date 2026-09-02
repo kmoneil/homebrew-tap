@@ -1,0 +1,61 @@
+name: brew
+
+# A formula cannot be checked anywhere but on a machine with Homebrew, and the
+# formula in this tap installs a pre-built binary rather than compiling one, so
+# "it parses" is a long way short of "it works". This runs the three questions
+# that matter: is the Ruby well formed, does the formula satisfy audit, and does
+# the thing it installs actually run.
+#
+# Scoped to jr on purpose. gcp-cli.rb predates this workflow and has never been
+# audited; adding it to the matrix is a separate change, so that a red run here
+# always means somebody broke jr.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  formula:
+    name: audit, install, test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
+      - name: install this checkout as the tap
+        # Copied rather than symlinked, and copied to exactly where `brew tap`
+        # would have put it, so Homebrew resolves the formula by the same path
+        # a user's install does. The copy keeps .git, which brew wants.
+        run: |
+          tap="$(brew --repository)/Library/Taps/kmoneil/homebrew-tap"
+          mkdir -p "$(dirname "$tap")"
+          cp -R "$GITHUB_WORKSPACE" "$tap"
+          brew tap
+          test -f "$tap/jr.rb"
+
+      # First, because it catches a syntax error in a second rather than after
+      # a download.
+      - name: brew style
+        run: brew style kmoneil/tap/jr
+
+      - name: brew audit
+        run: brew audit --strict --online kmoneil/tap/jr
+
+      - name: brew install
+        run: brew install --verbose kmoneil/tap/jr
+
+      # The formula's own test block: the binary reports the version the formula
+      # claims, and `jr schema --limit 3` exits 3 with parseable stdout.
+      - name: brew test
+        run: brew test --verbose kmoneil/tap/jr
+
+      - name: the installed binary answers
+        run: |
+          jr version --format tsv
+          jr --help > /dev/null
