@@ -5,7 +5,7 @@ class Jr < Formula
 
   # No `version` stanza. Homebrew scans it out of the release URL, and `brew
   # audit` refuses a declaration that agrees with what it already scanned:
-  # "version 0.10.1 is redundant with version scanned from URL". gcp-cli.rb
+  # "version 0.10.2 is redundant with version scanned from URL". gcp-cli.rb
   # declares one because its URLs name a bare binary with no version in it.
 
   livecheck do
@@ -22,21 +22,21 @@ class Jr < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/jr/releases/download/v0.10.1/jr-full_0.10.1_darwin_arm64.tar.gz"
-      sha256 "dc7b0b48c7357fb9b4fb2f0d036acbc7a8ca01382354f725526c1b76bd686fc0"
+      url "https://github.com/kmoneil/jr/releases/download/v0.10.2/jr-full_0.10.2_darwin_arm64.tar.gz"
+      sha256 "5c20ad76e701b975a1509134dbeefb378197d958fb11fdb819cea1c75e9d20d1"
     else
-      url "https://github.com/kmoneil/jr/releases/download/v0.10.1/jr-full_0.10.1_darwin_amd64.tar.gz"
-      sha256 "7877f75e071b8ebaaca3a5418e2eb5290bb9c1887b39943253856bffe290c5bf"
+      url "https://github.com/kmoneil/jr/releases/download/v0.10.2/jr-full_0.10.2_darwin_amd64.tar.gz"
+      sha256 "fa05bcda94185c245d3d2d89f1fcb1b332da416c983f9c83a0362f8d8d95031f"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/jr/releases/download/v0.10.1/jr-full_0.10.1_linux_arm64.tar.gz"
-      sha256 "55fccba04dd25b2f5435c416484d7c01bb8b825ce211f4452c6fd01825ab8846"
+      url "https://github.com/kmoneil/jr/releases/download/v0.10.2/jr-full_0.10.2_linux_arm64.tar.gz"
+      sha256 "eb32b88ecaf6abd822d09857d2b29c3672f15c1108ec04703bb8929e14e5c641"
     else
-      url "https://github.com/kmoneil/jr/releases/download/v0.10.1/jr-full_0.10.1_linux_amd64.tar.gz"
-      sha256 "fd87edc40b98ce03fbb0bdd4d6f7461f43d0edc358035159ffd013ef3d2a7e41"
+      url "https://github.com/kmoneil/jr/releases/download/v0.10.2/jr-full_0.10.2_linux_amd64.tar.gz"
+      sha256 "dd0730a77ff156b42768e7394f732b752f496f0a0338ff6313e42181f5054156"
     end
   end
 
