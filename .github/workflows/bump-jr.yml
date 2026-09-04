@@ -107,6 +107,13 @@ jobs:
           git checkout -b "$branch"
           git add jr.rb
           git commit -F "$RUNNER_TEMP/commit-message.txt"
+          # A previous attempt at this version may have failed and left its
+          # branch behind, which is deliberate: it is the evidence. But this
+          # checkout has never heard of it, so --force-with-lease refuses with
+          # "stale info" and the retry cannot start. Fetching it first is what
+          # gives the lease something to be about; without the fetch the choice
+          # is between a bare --force and a workflow that cannot be re-run.
+          git fetch origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" || true
           git push --force-with-lease origin "$branch"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
