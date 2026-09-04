@@ -1,37 +1,53 @@
 name: verify the formula
 description: >
-  Audit, install and test jr.rb as it stands in the workspace, on a machine
-  with Homebrew.
+  Audit, install and test jr.rb as it stands in the checkout, on a machine with
+  Homebrew.
 
 # One definition of "the formula is good", because there are two callers and
 # were nearly two copies. brew.yml asks the question of a branch somebody
-# pushed; bump-jr.yml asks it of a formula a script has just rewritten, before
-# that rewrite is allowed to land. A second copy would drift, and the half that
-# drifted would be the one guarding the automated change nobody watches.
+# pushed; bump-jr.yml asks it of a branch a script wrote. A second copy would
+# drift, and the half that drifted would be the one guarding the automated
+# change nobody watches.
+
+inputs:
+  expect-version:
+    description: >
+      The version the installed binary must report. Empty means "whatever this
+      formula says", which is all brew.yml can ask: it verifies a branch and
+      has nothing else to compare against. A bump knows the answer before it
+      starts and passes it, which is the only way this can catch a formula that
+      is not the one the caller thought it was verifying.
+    required: false
+    default: ""
 
 runs:
   using: composite
   steps:
     - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
 
-    - name: install this checkout as the tap
-      # Copied rather than symlinked, and copied to exactly where `brew tap`
-      # would have put it, so Homebrew resolves the formula by the same path
-      # a user's install does. The copy keeps .git, which brew wants.
+    - name: this checkout is the tap
+      # setup-homebrew has already symlinked the checkout into the taps
+      # directory, so there is nothing to install and this only says so out
+      # loud. It used to `cp -R "$GITHUB_WORKSPACE" "$tap"`, which with that
+      # symlink in place copied the checkout into itself and left a stray
+      # homebrew-tap/ inside the repository.
       #
-      # Nothing is removed first, however much an `rm -rf` reads like hygiene
-      # here. setup-homebrew has already put a symlink at that path, and its
-      # own post-job cleanup removes it with a plain `rm`: replace the symlink
-      # with a real directory and the cleanup fails the job after every check
-      # has passed. That is measured, not guessed, and it cost a red run whose
-      # six checks were all green.
+      # The symlink is also why setup-homebrew's `git checkout -B main` reaches
+      # the working tree: the tap it resets is this checkout. Anything that
+      # needs to survive that has to be committed before this action runs,
+      # which is why bump-jr pushes a branch and verifies the branch.
       shell: bash
       run: |
         tap="$(brew --repository)/Library/Taps/kmoneil/homebrew-tap"
-        mkdir -p "$(dirname "$tap")"
-        cp -R "$GITHUB_WORKSPACE" "$tap"
-        brew tap
+        test -L "$tap" || { echo "$tap is not a symlink; setup-homebrew changed"; exit 1; }
+        resolved="$(cd "$tap" && pwd -P)"
+        expected="$(cd "$GITHUB_WORKSPACE" && pwd -P)"
+        [ "$resolved" = "$expected" ] || {
+          echo "the tap resolves to $resolved, not this checkout at $expected"
+          exit 1
+        }
         test -f "$tap/jr.rb"
+        brew tap
 
     # First, because it catches a syntax error in a second rather than after
     # a download.
@@ -58,3 +74,20 @@ runs:
       run: |
         jr version --format tsv
         jr --help > /dev/null
+
+    - name: the binary is the version the caller asked for
+      if: inputs.expect-version != ''
+      # The formula's own test asserts the binary matches the formula, and a
+      # formula that was quietly reverted still satisfies that: it is wrong and
+      # self-consistent. This is the assertion that catches it, and it exists
+      # because on 2026-09-04 a bump to 0.13.2 verified 0.13.1 and passed,
+      # after setup-homebrew reset away the uncommitted rewrite.
+      shell: bash
+      run: |
+        want='${{ inputs.expect-version }}'
+        got=$(jr version --format tsv | awk -F'\t' '$1=="@release"{print $2}')
+        printf 'expected %s, installed %s\n' "$want" "$got"
+        [ "$want" = "$got" ] || {
+          echo "the formula that was verified is not the one the caller meant"
+          exit 1
+        }
