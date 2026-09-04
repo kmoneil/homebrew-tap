@@ -1,0 +1,3 @@
+# Byte-compiled scripts, and what bump-jr.py saves while it checks a digest.
+__pycache__/
+dist/

@@ -66,11 +66,21 @@ def names(version: str) -> list[str]:
 
 class BumpTest(unittest.TestCase):
     def setUp(self):
-        self.formula = Path(self.enterContext(__import__("tempfile").TemporaryDirectory()))
-        self.formula = self.formula / "jr.rb"
+        import os
+        import tempfile
+
+        scratch = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        self.formula = scratch / "jr.rb"
         self.formula.write_text(FORMULA)
         self.real = bump.hashlib.sha256(b"archive").hexdigest()
         self.addCleanup(setattr, bump, "fetch", bump.fetch)
+        # The script saves what it downloads so the workflow can check its
+        # provenance. Under test that has to land somewhere temporary: the
+        # default is ./dist, and a test suite that writes into the repository
+        # it is testing gets those files committed by the next `git add -A`.
+        # Which is exactly what happened.
+        os.environ["JR_DOWNLOAD_DIR"] = str(scratch / "downloads")
+        self.addCleanup(os.environ.pop, "JR_DOWNLOAD_DIR", None)
 
     def use(self, manifest, body=b"archive"):
         bump.fetch = Stub(manifest, body)
