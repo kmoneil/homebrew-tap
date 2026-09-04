@@ -1,0 +1,54 @@
+name: verify the formula
+description: >
+  Audit, install and test jr.rb as it stands in the workspace, on a machine
+  with Homebrew.
+
+# One definition of "the formula is good", because there are two callers and
+# were nearly two copies. brew.yml asks the question of a branch somebody
+# pushed; bump-jr.yml asks it of a formula a script has just rewritten, before
+# that rewrite is allowed to land. A second copy would drift, and the half that
+# drifted would be the one guarding the automated change nobody watches.
+
+runs:
+  using: composite
+  steps:
+    - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
+    - name: install this checkout as the tap
+      # Copied rather than symlinked, and copied to exactly where `brew tap`
+      # would have put it, so Homebrew resolves the formula by the same path
+      # a user's install does. The copy keeps .git, which brew wants.
+      shell: bash
+      run: |
+        tap="$(brew --repository)/Library/Taps/kmoneil/homebrew-tap"
+        rm -rf "$tap"
+        mkdir -p "$(dirname "$tap")"
+        cp -R "$GITHUB_WORKSPACE" "$tap"
+        brew tap
+        test -f "$tap/jr.rb"
+
+    # First, because it catches a syntax error in a second rather than after
+    # a download.
+    - name: brew style
+      shell: bash
+      run: brew style kmoneil/tap/jr
+
+    - name: brew audit
+      shell: bash
+      run: brew audit --strict --online kmoneil/tap/jr
+
+    - name: brew install
+      shell: bash
+      run: brew install --verbose kmoneil/tap/jr
+
+    # The formula's own test block: the binary reports the version the formula
+    # claims, and `jr schema --limit 3` exits 3 with parseable stdout.
+    - name: brew test
+      shell: bash
+      run: brew test --verbose kmoneil/tap/jr
+
+    - name: the installed binary answers
+      shell: bash
+      run: |
+        jr version --format tsv
+        jr --help > /dev/null

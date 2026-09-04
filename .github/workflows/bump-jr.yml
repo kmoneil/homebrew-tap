@@ -1,0 +1,122 @@
+name: bump jr
+
+# Point jr.rb at a jr release without anybody editing eight lines by hand.
+#
+# The release workflow in kmoneil/jr sends `jr-released` here once the archives
+# and their checksums are published. Everything after that is this job, and it
+# lands nothing it has not first installed and run.
+#
+# **There is no pull request, and that is deliberate.** A PR opened with the
+# workflow's own GITHUB_TOKEN does not trigger other workflows, so the brew
+# checks would not run on it: the result would look gated and be less gated
+# than what happens here, where the same checks run against the rewritten
+# formula before the commit exists. If the record of a PR is worth more than
+# that, the change is a token with permission to open one, not a weaker gate.
+
+on:
+  repository_dispatch:
+    types: [jr-released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: the jr release to point at, such as v0.13.2
+        required: true
+
+permissions:
+  contents: write
+
+# Two releases in quick succession queue rather than race. Cancelling would
+# leave the second one bumping a formula the first had already rewritten.
+concurrency:
+  group: bump-jr
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    name: bump, verify, land
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: which release
+        id: which
+        run: |
+          tag="${{ github.event.inputs.tag || github.event.client_payload.tag }}"
+          [ -n "$tag" ] || { echo "no tag was given"; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "asked to bump to $tag"
+
+      # Before trusting the tool, run its own tests. They cover the refusals,
+      # which a healthy release never produces and which are the whole reason
+      # the rewrite is a script rather than a sed line.
+      - name: the script's own tests
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
+
+      - name: rewrite the formula
+        id: bump
+        env:
+          JR_DOWNLOAD_DIR: ${{ runner.temp }}/archives
+        run: python3 .github/scripts/bump-jr.py --tag "${{ steps.which.outputs.tag }}"
+
+      # A re-run of a release dispatches again. The second one has nothing to
+      # do, rather than something to undo.
+      - name: nothing to do
+        if: steps.bump.outputs.changed != 'true'
+        run: echo "jr.rb already points at ${{ steps.bump.outputs.version }}"
+
+      - name: the archives came from the release workflow
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # The digests are already checked against the bytes by the script. This
+        # is the other question: that those bytes were built by kmoneil/jr's
+        # own workflow rather than uploaded by somebody who could edit a
+        # release. `gh attestation verify` prints nothing on success and exits
+        # 1 on a file it cannot vouch for.
+        run: |
+          for archive in "${{ runner.temp }}"/archives/*.tar.gz; do
+            echo "verifying $(basename "$archive")"
+            gh attestation verify "$archive" --repo kmoneil/jr
+          done
+
+      - name: audit, install, test
+        if: steps.bump.outputs.changed == 'true'
+        uses: ./.github/actions/verify-formula
+
+      - name: land it
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+          TAG: ${{ steps.which.outputs.tag }}
+        # Pushed to main rather than proposed, because the checks that a
+        # proposal would wait for have already run above, against this exact
+        # formula. A push authenticated by GITHUB_TOKEN triggers no workflow,
+        # so brew.yml will not run again on main; this run is the record.
+        #
+        # If main moved while this was installing, the push is rejected and the
+        # job goes red. That is the honest outcome: the formula this verified
+        # is no longer the formula main holds, and the answer is another run
+        # rather than a force.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Written to a file rather than a heredoc: a heredoc inside an
+          # indented block scalar carries its indentation into the message.
+          {
+            printf 'chore(jr): bump to %s\n\n' "$VERSION"
+            printf 'Four URLs and four checksums, written by\n'
+            printf '.github/scripts/bump-jr.py and landed by the bump-jr\n'
+            printf 'workflow.\n\n'
+            printf 'Every digest was read from the release checksums.txt and\n'
+            printf 're-derived from the archive downloaded from the URL this\n'
+            printf 'formula now carries; all four agree. Build provenance was\n'
+            printf 'verified on all four archives against kmoneil/jr. The\n'
+            printf 'formula was audited, installed and tested on a macOS runner\n'
+            printf 'before this commit existed, which runs both of its\n'
+            printf 'assertions against the real artifact.\n\n'
+            printf 'Release notes:\n'
+            printf 'https://github.com/kmoneil/jr/releases/tag/%s\n' "$TAG"
+          } > "$RUNNER_TEMP/commit-message.txt"
+          git add jr.rb
+          git commit -F "$RUNNER_TEMP/commit-message.txt"
+          git push origin HEAD:main
