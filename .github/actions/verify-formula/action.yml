@@ -18,10 +18,16 @@ runs:
       # Copied rather than symlinked, and copied to exactly where `brew tap`
       # would have put it, so Homebrew resolves the formula by the same path
       # a user's install does. The copy keeps .git, which brew wants.
+      #
+      # Nothing is removed first, however much an `rm -rf` reads like hygiene
+      # here. setup-homebrew has already put a symlink at that path, and its
+      # own post-job cleanup removes it with a plain `rm`: replace the symlink
+      # with a real directory and the cleanup fails the job after every check
+      # has passed. That is measured, not guessed, and it cost a red run whose
+      # six checks were all green.
       shell: bash
       run: |
         tap="$(brew --repository)/Library/Taps/kmoneil/homebrew-tap"
-        rm -rf "$tap"
         mkdir -p "$(dirname "$tap")"
         cp -R "$GITHUB_WORKSPACE" "$tap"
         brew tap
