@@ -146,20 +146,33 @@ jobs:
     needs: [prepare, verify]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-
-      # A fast-forward, so main only ever gains the commit that was verified.
-      # If main moved while the macOS runner was installing, this is rejected
-      # and the job goes red: the formula that was verified is no longer the
-      # formula main holds, and the answer is another run rather than a force.
+      # No checkout. The commit to land is already on the remote, pushed by
+      # prepare and verified by the job above, and moving a ref is a statement
+      # about the remote rather than about a working copy.
       #
-      # The branch is deleted on success and kept on failure, where it is the
-      # evidence of what was tried.
+      # It used to check out and `git push origin "$SHA:main"`, which cannot
+      # work: a fresh shallow clone of main does not have that object, so git
+      # has nothing to push and answers "needs force", which is a misleading
+      # thing to read at the end of a run that did everything right.
+      #
+      # force is false, so GitHub refuses this unless it is a fast-forward. If
+      # main moved while the macOS runner was installing, the formula that was
+      # verified is no longer the formula main holds, and the answer is another
+      # run rather than a force.
       - name: land the verified commit
         env:
+          GH_TOKEN: ${{ github.token }}
           SHA: ${{ needs.prepare.outputs.sha }}
           BRANCH: ${{ needs.prepare.outputs.branch }}
         run: |
-          git push origin "${SHA}:main"
-          git push origin --delete "${BRANCH}"
+          gh api -X PATCH "repos/${GITHUB_REPOSITORY}/git/refs/heads/main" \
+            -f sha="${SHA}" -F force=false > /dev/null
           echo "main is at ${SHA}"
+
+      # Only now, and only on success: a failed run keeps its branch, where it
+      # is the evidence of what was tried.
+      - name: drop the bump branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ needs.prepare.outputs.branch }}
+        run: gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}"
