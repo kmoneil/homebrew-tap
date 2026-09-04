@@ -126,6 +126,12 @@ jobs:
 
       - uses: ./.github/actions/verify-formula
         with:
+          # Both, and the second is what makes the first trustworthy.
+          # setup-homebrew will replace this checkout with GITHUB_SHA, which on
+          # a dispatch is main; formula-ref puts the bump's jr.rb back
+          # afterwards, and expect-version fails the job if anything about that
+          # did not work rather than installing the previous release quietly.
+          formula-ref: ${{ needs.prepare.outputs.sha }}
           expect-version: ${{ needs.prepare.outputs.version }}
 
   land:

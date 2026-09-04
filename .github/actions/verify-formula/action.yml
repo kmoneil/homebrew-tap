@@ -10,6 +10,25 @@ description: >
 # change nobody watches.
 
 inputs:
+  formula-ref:
+    description: >
+      A commit whose jr.rb should be verified, restored into the working tree
+      after setup-homebrew has finished with it.
+
+      Needed because setup-homebrew does not verify what you checked out. Its
+      main.sh empties GITHUB_WORKSPACE, moves the tap into it, symlinks the
+      taps entry at it, then runs `git checkout --force -B main FETCH_HEAD`
+      against a fetch of **GITHUB_SHA**. For a pull_request that is the merge
+      commit, so brew.yml gets exactly the formula the PR proposes and has
+      always been right. For a workflow_dispatch it is the head of the branch
+      the workflow was dispatched on, so a bump's own commit is discarded
+      however it was checked out. Restoring one file afterwards is the smallest
+      thing that survives all of that.
+
+      Empty means verify whatever setup-homebrew left, which is what brew.yml
+      wants.
+    required: false
+    default: ""
   expect-version:
     description: >
       The version the installed binary must report. Empty means "whatever this
@@ -24,6 +43,19 @@ runs:
   using: composite
   steps:
     - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
+
+    - name: restore the formula being verified
+      if: inputs.formula-ref != ''
+      # After setup-homebrew, never before: it force-checks-out GITHUB_SHA over
+      # whatever is here, so anything written first is gone. One file, from a
+      # commit that is already on the remote, and the expect-version step below
+      # is what proves it arrived.
+      shell: bash
+      run: |
+        git fetch --depth=1 origin '${{ inputs.formula-ref }}'
+        git checkout '${{ inputs.formula-ref }}' -- jr.rb
+        git --no-pager diff --stat HEAD -- jr.rb || true
+        grep -o 'jr-full_[0-9.]*_darwin_arm64' jr.rb | head -1
 
     - name: this checkout is the tap
       # setup-homebrew has already symlinked the checkout into the taps
