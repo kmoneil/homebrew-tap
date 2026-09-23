@@ -34,6 +34,23 @@ $ python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
 The workflow that calls it is `.github/workflows/bump-jr.yml`, which runs the
 jobs every formula shares, in `.github/workflows/bump-formula.yml`.
 
+## `bump-hunk.py`
+
+Points `hunk.rb` at a `kmoneil/hunk` release: a binary for each of four
+platforms and the agent skill, five URLs and five `sha256` lines, and nothing
+else in the file.
+
+```console
+$ python3 .github/scripts/bump-hunk.py --tag v0.2.8
+$ python3 .github/scripts/bump-hunk.py --tag v0.2.8 --check   # say, write nothing
+```
+
+It refuses what `bump-jr.py` refuses, against the release's `SHA256SUMS`, and
+it keeps nothing it downloads. `test_bump_hunk.py` serves each file different
+bytes, so a digest that lands beside the wrong URL fails a test rather than
+matching by accident. The workflow that calls it is
+`.github/workflows/bump-hunk.yml`.
+
 ## `verify-provenance.py`
 
 Checks that every file a formula names was built by the release workflow it
@@ -51,7 +68,8 @@ $ python3 .github/scripts/verify-provenance.py --formula jr.rb --repo kmoneil/jr
 ```
 
 It runs when a formula's bump workflow names `attested-by`, which `bump-jr.yml`
-does. A formula naming no release file, or naming a file the bump did not
+does and `bump-hunk.yml` does not, because hunk's release publishes no
+attestations. A formula naming no release file, or naming a file the bump did not
 download, is refused rather than passed. `test_verify_provenance.py` holds what
 it asks gh and what it refuses. gh's own answers were checked against a real jr
 release, where a tampered archive, the wrong tag and the wrong workflow each
