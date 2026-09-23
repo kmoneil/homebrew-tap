@@ -41,9 +41,21 @@ on:
         type: string
         required: true
       repo:
-        description: the repository that published the release, for the commit message
+        description: >
+          The repository that published the release. The commit message links
+          its release notes, and attestations are looked up there.
         type: string
         required: true
+      attested-by:
+        description: >
+          The workflow that attests the release's files, as
+          owner/repo/.github/workflows/file.yml. When it is given, every file
+          the formula names must carry build provenance from that workflow,
+          built from the tag on a runner GitHub hosts, before anything is
+          committed. Empty for a release that publishes no attestations.
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -62,6 +74,7 @@ jobs:
     env:
       FORMULA: ${{ inputs.formula }}
       TAG: ${{ inputs.tag }}
+      ATTESTED_BY: ${{ inputs.attested-by }}
     steps:
       - uses: actions/checkout@v7
 
@@ -72,14 +85,35 @@ jobs:
 
       # Before trusting the tool, run its own tests. They cover the refusals,
       # which a healthy release never produces and which are the whole reason
-      # the rewrite is a script rather than a sed line. This formula's only: a
-      # bump of one does not wait on another's script.
-      - name: the script's own tests
-        run: python3 -m unittest discover -s .github/scripts -p "test_bump_${FORMULA}.py" -v
+      # the rewrite is a script rather than a sed line. This formula's, and the
+      # provenance check's when this formula uses it: a bump of one does not
+      # wait on another's script.
+      - name: the scripts' own tests
+        run: |
+          python3 -m unittest discover -s .github/scripts -p "test_bump_${FORMULA}.py" -v
+          if [ -n "$ATTESTED_BY" ]; then
+            python3 -m unittest discover -s .github/scripts -p test_verify_provenance.py -v
+          fi
 
       - name: rewrite the formula
         id: bump
         run: python3 ".github/scripts/bump-${FORMULA}.py" --tag "$TAG"
+
+      # The rewrite proved the bytes behind each URL are the bytes the release's
+      # manifest names, and the manifest comes from the same workflow as the
+      # files. This proves which workflow that was: every file the formula names
+      # must be attested by the workflow the caller named, built from this tag,
+      # on a runner GitHub hosts. Before the commit, so a file without it never
+      # reaches a branch, let alone main.
+      - name: verify build provenance
+        if: steps.bump.outputs.changed == 'true' && inputs.attested-by != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ inputs.repo }}
+        run: >-
+          python3 .github/scripts/verify-provenance.py
+          --formula "${FORMULA}.rb" --repo "$REPO"
+          --workflow "$ATTESTED_BY" --tag "$TAG"
 
       # A re-run of a release dispatches again. The second one has nothing to
       # do, rather than something to undo.
@@ -100,19 +134,27 @@ jobs:
           # Written to a file rather than a heredoc: a heredoc inside an
           # indented block scalar carries its indentation into the message.
           #
-          # It claims what this workflow checked and nothing else. It used to
-          # add that build provenance had been verified on every archive, and
-          # nothing in this repository verifies provenance.
+          # It claims what this workflow checked and nothing else. Before the
+          # provenance step existed it said provenance was verified anyway; now
+          # it says so only when that step ran, which it passed, or there would
+          # be no commit.
           {
             printf 'chore(%s): bump to %s\n\n' "$FORMULA" "$VERSION"
             printf 'Written by .github/scripts/bump-%s.py and landed by\n' "$FORMULA"
             printf 'the bump-formula workflow.\n\n'
             printf 'Every digest was read from the release manifest and\n'
             printf 're-derived from the file downloaded from the URL this\n'
-            printf 'formula now carries. The formula was audited, installed\n'
-            printf 'and tested on a macOS runner from this commit, and the\n'
-            printf 'installed binary was asserted to report %s rather\n' "$VERSION"
-            printf 'than merely to agree with itself.\n\n'
+            printf 'formula now carries.\n\n'
+            if [ -n "$ATTESTED_BY" ]; then
+              printf 'Every one of those files carries build provenance from\n'
+              printf '%s,\n' "$ATTESTED_BY"
+              printf 'built from %s on a runner GitHub hosts, as checked\n' "$TAG"
+              printf 'by gh attestation verify.\n\n'
+            fi
+            printf 'The formula was audited, installed and tested on a macOS\n'
+            printf 'runner from this commit, and the installed binary was\n'
+            printf 'asserted to report %s rather than merely to agree\n' "$VERSION"
+            printf 'with itself.\n\n'
             printf 'Release notes:\n'
             printf 'https://github.com/%s/releases/tag/%s\n' "$REPO" "$TAG"
           } > "$RUNNER_TEMP/commit-message.txt"
