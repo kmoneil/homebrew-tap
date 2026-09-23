@@ -31,4 +31,5 @@ these before it trusts the script:
 $ python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
 ```
 
-The workflow that calls it is `.github/workflows/bump-jr.yml`.
+The workflow that calls it is `.github/workflows/bump-jr.yml`, which runs the
+jobs every formula shares, in `.github/workflows/bump-formula.yml`.

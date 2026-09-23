@@ -1,0 +1,206 @@
+name: bump a formula
+
+# Point a formula at a release without anybody editing its lines by hand.
+#
+# These are the three jobs. Each formula this tap keeps current has a short
+# workflow of its own, bump-<formula>.yml, that says when to run them and for
+# which formula: bump-jr.yml runs them on `jr-released` from kmoneil/jr. They
+# lived in bump-jr.yml until a second formula needed them, and moved here so
+# that the fixes they carry exist once rather than once per formula. Nothing
+# reaches main that has not been installed and run first.
+#
+# **The rewrite is committed and pushed to a branch before anything verifies
+# it**, which is the whole shape of this workflow and was learned the hard way.
+# Homebrew's setup-homebrew action symlinks this repository into the taps
+# directory and runs `git checkout -B main` on it, so an uncommitted rewrite in
+# the working tree is gone before brew reads the formula. The first version of
+# this workflow rewrote, then verified, then committed: the verification passed
+# against the reverted formula, installed the previous release, and the run went
+# red only because there was nothing left to commit. A gate that passes on the
+# wrong input is worse than no gate, so the change is committed first and the
+# thing verified is a ref rather than a working tree.
+#
+# There is no pull request. A PR opened with the workflow's own GITHUB_TOKEN
+# triggers no other workflow, so the brew checks would not run on it: it would
+# look gated and be less gated than the verify job below. If the record of a PR
+# is worth more than that, the change is a token that can open one, not a
+# weaker gate.
+
+on:
+  workflow_call:
+    inputs:
+      formula:
+        description: >
+          The formula to bump. It names the file (jr.rb), the script that
+          rewrites it (.github/scripts/bump-jr.py) and that script's tests
+          (test_bump_jr.py).
+        type: string
+        required: true
+      tag:
+        description: the release to point it at, such as v0.13.2
+        type: string
+        required: true
+      repo:
+        description: the repository that published the release, for the commit message
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: rewrite and push a branch
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.bump.outputs.changed }}
+      version: ${{ steps.bump.outputs.version }}
+      branch: ${{ steps.push.outputs.branch }}
+      sha: ${{ steps.push.outputs.sha }}
+    # Inputs reach the shell through the environment rather than being spliced
+    # into the script: a tag is whatever the dispatch said it was.
+    env:
+      FORMULA: ${{ inputs.formula }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: which release
+        run: |
+          [ -n "$TAG" ] || { echo "no tag was given"; exit 1; }
+          echo "asked to bump $FORMULA to $TAG"
+
+      # Before trusting the tool, run its own tests. They cover the refusals,
+      # which a healthy release never produces and which are the whole reason
+      # the rewrite is a script rather than a sed line. This formula's only: a
+      # bump of one does not wait on another's script.
+      - name: the script's own tests
+        run: python3 -m unittest discover -s .github/scripts -p "test_bump_${FORMULA}.py" -v
+
+      - name: rewrite the formula
+        id: bump
+        run: python3 ".github/scripts/bump-${FORMULA}.py" --tag "$TAG"
+
+      # A re-run of a release dispatches again. The second one has nothing to
+      # do, rather than something to undo.
+      - name: nothing to do
+        if: steps.bump.outputs.changed != 'true'
+        run: echo "${FORMULA}.rb already points at ${{ steps.bump.outputs.version }}"
+
+      - name: commit it to a branch
+        id: push
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+          REPO: ${{ inputs.repo }}
+        run: |
+          branch="bump/${FORMULA}-${VERSION}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Written to a file rather than a heredoc: a heredoc inside an
+          # indented block scalar carries its indentation into the message.
+          #
+          # It claims what this workflow checked and nothing else. It used to
+          # add that build provenance had been verified on every archive, and
+          # nothing in this repository verifies provenance.
+          {
+            printf 'chore(%s): bump to %s\n\n' "$FORMULA" "$VERSION"
+            printf 'Written by .github/scripts/bump-%s.py and landed by\n' "$FORMULA"
+            printf 'the bump-formula workflow.\n\n'
+            printf 'Every digest was read from the release manifest and\n'
+            printf 're-derived from the file downloaded from the URL this\n'
+            printf 'formula now carries. The formula was audited, installed\n'
+            printf 'and tested on a macOS runner from this commit, and the\n'
+            printf 'installed binary was asserted to report %s rather\n' "$VERSION"
+            printf 'than merely to agree with itself.\n\n'
+            printf 'Release notes:\n'
+            printf 'https://github.com/%s/releases/tag/%s\n' "$REPO" "$TAG"
+          } > "$RUNNER_TEMP/commit-message.txt"
+          git checkout -b "$branch"
+          git add "${FORMULA}.rb"
+          git commit -F "$RUNNER_TEMP/commit-message.txt"
+          # A previous attempt at this version may have failed and left its
+          # branch behind, which is deliberate: it is the evidence. But this
+          # checkout has never heard of it, so --force-with-lease refuses with
+          # "stale info" and the retry cannot start. Fetching it first is what
+          # gives the lease something to be about; without the fetch the choice
+          # is between a bare --force and a workflow that cannot be re-run.
+          git fetch origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" || true
+          git push --force-with-lease origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: audit, install, test the rewrite
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: macos-latest
+    steps:
+      # The branch, not the default ref. This is the reason the branch exists:
+      # what gets audited and installed has to be the rewrite itself, and the
+      # only way to be sure of that is to check it out by name.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+
+      - uses: ./.github/actions/verify-formula
+        with:
+          formula: ${{ inputs.formula }}
+          # Both, and the second is what makes the first trustworthy.
+          # setup-homebrew will replace this checkout with GITHUB_SHA, which on
+          # a dispatch is main; formula-ref puts the bump's formula back
+          # afterwards, and expect-version fails the job if anything about that
+          # did not work rather than installing the previous release quietly.
+          formula-ref: ${{ needs.prepare.outputs.sha }}
+          expect-version: ${{ needs.prepare.outputs.version }}
+
+  land:
+    name: fast-forward main
+    needs: [prepare, verify]
+    # Only a run on main lands. prepare commits on top of whatever ref the run
+    # started on, so a manual run from a branch would otherwise fast-forward
+    # main over that branch's unreviewed commits along with the bump. From a
+    # branch the rewrite is still pushed and verified, which is how a change to
+    # these jobs can be tried, and nothing lands.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      # No checkout. The commit to land is already on the remote, pushed by
+      # prepare and verified by the job above, and moving a ref is a statement
+      # about the remote rather than about a working copy.
+      #
+      # It used to check out and `git push origin "$SHA:main"`, which cannot
+      # work: a fresh shallow clone of main does not have that object, so git
+      # has nothing to push and answers "needs force", which is a misleading
+      # thing to read at the end of a run that did everything right.
+      #
+      # force is false, so GitHub refuses this unless it is a fast-forward. If
+      # main moved while the macOS runner was installing, the formula that was
+      # verified is no longer the formula main holds, and the answer is another
+      # run rather than a force.
+      - name: land the verified commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ needs.prepare.outputs.sha }}
+          BRANCH: ${{ needs.prepare.outputs.branch }}
+        run: |
+          # And only as the one commit on top of main as it stands, which says
+          # the same thing a second way, and says it before anything moves.
+          main=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq .object.sha)
+          parent=$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/${SHA}" --jq '.parents[0].sha')
+          if [ "$parent" != "$main" ]; then
+            echo "${SHA} sits on ${parent}, and main is at ${main}." >&2
+            echo "Main moved, or this run did not start from it. Run it again from main." >&2
+            exit 1
+          fi
+          gh api -X PATCH "repos/${GITHUB_REPOSITORY}/git/refs/heads/main" \
+            -f sha="${SHA}" -F force=false > /dev/null
+          echo "main is at ${SHA}"
+
+      # Only now, and only on success: a failed run keeps its branch, where it
+      # is the evidence of what was tried.
+      - name: drop the bump branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ needs.prepare.outputs.branch }}
+        run: gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}"

@@ -6,13 +6,14 @@ name: brew
 # that matter: is the Ruby well formed, does the formula satisfy audit, and does
 # the thing it installs actually run.
 #
-# The steps themselves live in .github/actions/verify-formula, because bump-jr
+# The steps themselves live in .github/actions/verify-formula, because a bump
 # asks the same question of a formula it has just rewritten and the two must not
 # be able to disagree about what an acceptable formula is.
 #
-# Scoped to jr on purpose. gcp-cli.rb predates this workflow and has never been
-# audited; adding it to the matrix is a separate change, so that a red run here
-# always means somebody broke jr.
+# Scoped on purpose to the formulae a bump workflow keeps current, which is jr.
+# gcp-cli.rb predates this workflow and has never been audited; adding it to
+# the matrix is a separate change, so that a red run here always means
+# somebody broke a formula that is meant to be working.
 
 on:
   push:
@@ -25,8 +26,15 @@ permissions:
 
 jobs:
   formula:
-    name: audit, install, test
+    name: audit, install, test ${{ matrix.formula }}
     runs-on: macos-latest
+    strategy:
+      # One formula's failure says nothing about another's.
+      fail-fast: false
+      matrix:
+        formula: [jr]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/verify-formula
+        with:
+          formula: ${{ matrix.formula }}
