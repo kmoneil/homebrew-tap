@@ -1,19 +1,25 @@
 name: verify the formula
 description: >
-  Audit, install and test jr.rb as it stands in the checkout, on a machine with
-  Homebrew.
+  Audit, install and test one formula as it stands in the checkout, on a
+  machine with Homebrew.
 
 # One definition of "the formula is good", because there are two callers and
 # were nearly two copies. brew.yml asks the question of a branch somebody
-# pushed; bump-jr.yml asks it of a branch a script wrote. A second copy would
-# drift, and the half that drifted would be the one guarding the automated
-# change nobody watches.
+# pushed; bump-formula.yml asks it of a branch a script wrote. A second copy
+# would drift, and the half that drifted would be the one guarding the
+# automated change nobody watches.
 
 inputs:
+  formula:
+    description: >
+      The formula to verify, such as jr: its file is jr.rb and brew knows it as
+      kmoneil/tap/jr. It has to be one the first step names, because the last
+      two have to know how to ask its binary what version it is.
+    required: true
   formula-ref:
     description: >
-      A commit whose jr.rb should be verified, restored into the working tree
-      after setup-homebrew has finished with it.
+      A commit whose formula should be verified, restored into the working
+      tree after setup-homebrew has finished with it.
 
       Needed because setup-homebrew does not verify what you checked out. Its
       main.sh empties GITHUB_WORKSPACE, moves the tap into it, symlinks the
@@ -42,6 +48,20 @@ inputs:
 runs:
   using: composite
   steps:
+    # The runner does not enforce an action's required input, and passes an
+    # empty one as an empty string. So the name is checked here, before
+    # anything is installed, rather than discovered later as a missing ".rb".
+    - name: which formula
+      shell: bash
+      run: |
+        case '${{ inputs.formula }}' in
+          jr) echo "verifying ${{ inputs.formula }}.rb" ;;
+          *)
+            echo "'${{ inputs.formula }}' is not a formula this action knows how to verify" >&2
+            exit 1
+            ;;
+        esac
+
     - uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c # 2026.07.10.1
 
     - name: restore the formula being verified
@@ -53,9 +73,9 @@ runs:
       shell: bash
       run: |
         git fetch --depth=1 origin '${{ inputs.formula-ref }}'
-        git checkout '${{ inputs.formula-ref }}' -- jr.rb
-        git --no-pager diff --stat HEAD -- jr.rb || true
-        grep -o 'jr-full_[0-9.]*_darwin_arm64' jr.rb | head -1
+        git checkout '${{ inputs.formula-ref }}' -- '${{ inputs.formula }}.rb'
+        git --no-pager diff --stat HEAD -- '${{ inputs.formula }}.rb' || true
+        grep -o 'releases/download/v[^/]*' '${{ inputs.formula }}.rb' | head -1
 
     - name: this checkout is the tap
       # setup-homebrew has already symlinked the checkout into the taps
@@ -78,34 +98,38 @@ runs:
           echo "the tap resolves to $resolved, not this checkout at $expected"
           exit 1
         }
-        test -f "$tap/jr.rb"
+        test -f "$tap/${{ inputs.formula }}.rb"
         brew tap
 
     # First, because it catches a syntax error in a second rather than after
     # a download.
     - name: brew style
       shell: bash
-      run: brew style kmoneil/tap/jr
+      run: brew style kmoneil/tap/${{ inputs.formula }}
 
     - name: brew audit
       shell: bash
-      run: brew audit --strict --online kmoneil/tap/jr
+      run: brew audit --strict --online kmoneil/tap/${{ inputs.formula }}
 
     - name: brew install
       shell: bash
-      run: brew install --verbose kmoneil/tap/jr
+      run: brew install --verbose kmoneil/tap/${{ inputs.formula }}
 
-    # The formula's own test block: the binary reports the version the formula
-    # claims, and `jr schema --limit 3` exits 3 with parseable stdout.
+    # The formula's own test block, which for every formula here asserts at
+    # least that the binary reports the version the formula claims.
     - name: brew test
       shell: bash
-      run: brew test --verbose kmoneil/tap/jr
+      run: brew test --verbose kmoneil/tap/${{ inputs.formula }}
 
     - name: the installed binary answers
       shell: bash
       run: |
-        jr version --format tsv
-        jr --help > /dev/null
+        case '${{ inputs.formula }}' in
+          jr)
+            jr version --format tsv
+            jr --help > /dev/null
+            ;;
+        esac
 
     - name: the binary is the version the caller asked for
       if: inputs.expect-version != ''
@@ -117,7 +141,9 @@ runs:
       shell: bash
       run: |
         want='${{ inputs.expect-version }}'
-        got=$(jr version --format tsv | awk -F'\t' '$1=="@release"{print $2}')
+        case '${{ inputs.formula }}' in
+          jr) got=$(jr version --format tsv | awk -F'\t' '$1=="@release"{print $2}') ;;
+        esac
         printf 'expected %s, installed %s\n' "$want" "$got"
         [ "$want" = "$got" ] || {
           echo "the formula that was verified is not the one the caller meant"

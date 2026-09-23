@@ -1,0 +1,36 @@
+name: bump jr
+
+# Point jr.rb at a jr release without anybody editing eight lines by hand.
+#
+# The release workflow in kmoneil/jr sends `jr-released` here once the archives
+# and their checksums are published. The jobs that rewrite, verify and land the
+# formula are in bump-formula.yml, shared by every formula this tap keeps
+# current; this says when to run them, and for which.
+
+on:
+  repository_dispatch:
+    types: [jr-released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: the jr release to point at, such as v0.13.2
+        required: true
+
+permissions:
+  contents: write
+
+# Two releases in quick succession queue rather than race. Cancelling would
+# leave a branch pushed and never landed. The group is jr's alone, so another
+# formula's bump can run beside it; whichever lands second finds main moved
+# and stops rather than forcing.
+concurrency:
+  group: bump-jr
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    uses: ./.github/workflows/bump-formula.yml
+    with:
+      formula: jr
+      repo: kmoneil/jr
+      tag: ${{ github.event.inputs.tag || github.event.client_payload.tag }}
