@@ -33,3 +33,26 @@ $ python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
 
 The workflow that calls it is `.github/workflows/bump-jr.yml`, which runs the
 jobs every formula shares, in `.github/workflows/bump-formula.yml`.
+
+## `verify-provenance.py`
+
+Checks that every file a formula names was built by the release workflow it
+claims, before a bump is committed. The bump scripts prove the bytes behind
+each URL are the bytes the release's manifest names, but the manifest comes
+from the same workflow as the files, so that proves agreement and not origin.
+This asks `gh attestation verify` about each file the bump downloaded and
+requires all of: an attestation in the release's repository, signed by the
+named workflow, built from the tag, on a runner GitHub hosts.
+
+```console
+$ python3 .github/scripts/bump-jr.py --tag v0.17.0 --check   # downloads into dist/
+$ python3 .github/scripts/verify-provenance.py --formula jr.rb --repo kmoneil/jr \
+    --workflow kmoneil/jr/.github/workflows/release.yml --tag v0.17.0
+```
+
+It runs when a formula's bump workflow names `attested-by`, which `bump-jr.yml`
+does. A formula naming no release file, or naming a file the bump did not
+download, is refused rather than passed. `test_verify_provenance.py` holds what
+it asks gh and what it refuses. gh's own answers were checked against a real jr
+release, where a tampered archive, the wrong tag and the wrong workflow each
+fail.

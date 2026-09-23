@@ -33,4 +33,6 @@ jobs:
     with:
       formula: jr
       repo: kmoneil/jr
+      # jr's release attests every archive it publishes.
+      attested-by: kmoneil/jr/.github/workflows/release.yml
       tag: ${{ github.event.inputs.tag || github.event.client_payload.tag }}
