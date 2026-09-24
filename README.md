@@ -18,9 +18,14 @@ $ brew install kmoneil/tap/jr
 $ jr version
 ```
 
-The formula also installs jr's agent skill, written by the binary it installs.
-Homebrew does not write into your home directory, so link it into Claude Code's
-skills once:
+It installs three things: the **full** profile's `jr`, its shell completions
+for bash, zsh and fish, and its agent skill. The next step is `jr auth login`,
+which [getting started](https://github.com/kmoneil/jr/blob/main/docs/getting-started.md)
+walks through, token and all.
+
+**The skill** is written at install by the binary the formula installs, with
+`jr skill --dir`, so it always describes the binary you have. Homebrew does not
+write into your home directory, so link it into Claude Code's skills once:
 
 ```console
 $ mkdir -p ~/.claude/skills
@@ -30,12 +35,16 @@ $ ln -s "$(brew --prefix)/opt/jr/share/jr/skill" ~/.claude/skills/jr
 From then on every `brew upgrade` moves the skill with the binary. If
 `~/.claude/skills/jr` is already a directory, remove it first.
 
-This installs the **full** profile. Every release also carries `jr-agent`,
-`jr-reader` and `jr-ci`, which are the same tool with capabilities compiled out
-rather than switched off, and those are fetched as tarballs from
+**The other profiles.** Every release also carries `jr-agent`, `jr-reader` and
+`jr-ci`, which are the same tool with capabilities compiled out rather than
+switched off, and those are fetched as archives from
 [the releases page](https://github.com/kmoneil/jr/releases) rather than through
 this tap. `jr-reader` is the one to hand an agent: it cannot change anything in
 Jira, because it does not contain the code that could.
+
+**On Windows**, jr is in [kmoneil/scoop-bucket](https://github.com/kmoneil/scoop-bucket)
+rather than here: `scoop install kmoneil/jr`, with the skill written into
+`~\.claude\skills\jr` for you.
 
 Installing through Homebrew also sidesteps macOS Gatekeeper. `brew` fetches with
 `curl`, which never attaches `com.apple.quarantine`, so the released binaries do
@@ -79,6 +88,24 @@ An LLM-native Google Cloud CLI. [kmoneil/gcp-cli](https://github.com/kmoneil/gcp
 ```console
 $ brew install kmoneil/tap/gcp-cli
 ```
+
+## How it stays current
+
+Each jr and hunk release tells this repository that it exists, with a
+`jr-released` or `hunk-released` dispatch, and `bump-jr.yml` or `bump-hunk.yml`
+runs the jobs every formula shares, in `bump-formula.yml`:
+
+1. rewrite the formula's URLs and digests, reading each digest from the
+   release's own manifest and re-deriving it from the file downloaded from the
+   URL the formula will carry;
+2. for jr, verify that every archive carries build provenance from jr's release
+   workflow, built from the tag, on a runner GitHub hosts;
+3. commit that to a branch, and audit, install and test the branch on a macOS
+   runner, where the installed binary has to report the version asked for;
+4. only then fast-forward `main`.
+
+A failed bump keeps its branch as the evidence, and `main` keeps the previous
+release. `brew.yml` audits, installs and tests every formula on every change.
 
 ## A note on layout
 
