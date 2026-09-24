@@ -55,7 +55,7 @@ runs:
       shell: bash
       run: |
         case '${{ inputs.formula }}' in
-          jr) echo "verifying ${{ inputs.formula }}.rb" ;;
+          jr|hunk) echo "verifying ${{ inputs.formula }}.rb" ;;
           *)
             echo "'${{ inputs.formula }}' is not a formula this action knows how to verify" >&2
             exit 1
@@ -129,6 +129,10 @@ runs:
             jr version --format tsv
             jr --help > /dev/null
             ;;
+          hunk)
+            hunk --version
+            hunk --help > /dev/null
+            ;;
         esac
 
     - name: the binary is the version the caller asked for
@@ -143,6 +147,7 @@ runs:
         want='${{ inputs.expect-version }}'
         case '${{ inputs.formula }}' in
           jr) got=$(jr version --format tsv | awk -F'\t' '$1=="@release"{print $2}') ;;
+          hunk) got=$(hunk --version | sed -n 's/^hunk v//p') ;;
         esac
         printf 'expected %s, installed %s\n' "$want" "$got"
         [ "$want" = "$got" ] || {

@@ -1,0 +1,35 @@
+name: bump hunk
+
+# Point hunk.rb at a hunk release: four binaries and the agent skill, and the
+# digest of each.
+#
+# The release workflow in kmoneil/hunk sends `hunk-released` here once the
+# binaries, the skill and SHA256SUMS are published. The jobs that rewrite,
+# verify and land the formula are in bump-formula.yml, shared by every formula
+# this tap keeps current; this says when to run them, and for which.
+
+on:
+  repository_dispatch:
+    types: [hunk-released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: the hunk release to point at, such as v0.2.8
+        required: true
+
+permissions:
+  contents: write
+
+# As in bump-jr.yml: two releases in quick succession queue rather than race,
+# and the group is hunk's alone.
+concurrency:
+  group: bump-hunk
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    uses: ./.github/workflows/bump-formula.yml
+    with:
+      formula: hunk
+      repo: kmoneil/hunk
+      tag: ${{ github.event.inputs.tag || github.event.client_payload.tag }}

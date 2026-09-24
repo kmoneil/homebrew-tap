@@ -32,6 +32,34 @@ through a browser does attach it, and
 [the troubleshooting guide](https://github.com/kmoneil/jr/blob/main/docs/troubleshooting.md#it-will-not-start)
 covers that case.
 
+### `hunk`
+
+A transactional multi-file text editor for coding agents: every edit must match
+exactly as many times as it claims, or nothing is written.
+[kmoneil/hunk](https://github.com/kmoneil/hunk).
+
+```console
+$ brew install kmoneil/tap/hunk
+$ hunk --version
+```
+
+The full name is not optional here. Homebrew core has an unrelated formula
+called `hunk`, a diff viewer, and `brew install hunk` installs that one. The two
+cannot be installed at once.
+
+The formula also installs hunk's agent skill, from the same release as the
+binary. Homebrew does not write into your home directory, so link it into
+Claude Code's skills once:
+
+```console
+$ mkdir -p ~/.claude/skills
+$ ln -s "$(brew --prefix)/opt/hunk/share/hunk/skill" ~/.claude/skills/hunk
+```
+
+From then on every `brew upgrade` moves the skill with the binary. If
+`~/.claude/skills/hunk` is already a directory, from `make install` in a clone,
+remove it first.
+
 ### `gcp-cli`
 
 An LLM-native Google Cloud CLI. [kmoneil/gcp-cli](https://github.com/kmoneil/gcp-cli).

@@ -4,10 +4,11 @@ name: bump a formula
 #
 # These are the three jobs. Each formula this tap keeps current has a short
 # workflow of its own, bump-<formula>.yml, that says when to run them and for
-# which formula: bump-jr.yml runs them on `jr-released` from kmoneil/jr. They
-# lived in bump-jr.yml until a second formula needed them, and moved here so
-# that the fixes they carry exist once rather than once per formula. Nothing
-# reaches main that has not been installed and run first.
+# which formula: bump-jr.yml on `jr-released` from kmoneil/jr, and
+# bump-hunk.yml on `hunk-released` from kmoneil/hunk. They lived in
+# bump-jr.yml until a second formula needed them, and moved here so that the
+# fixes they carry exist once rather than once per formula. Nothing reaches
+# main that has not been installed and run first.
 #
 # **The rewrite is committed and pushed to a branch before anything verifies
 # it**, which is the whole shape of this workflow and was learned the hard way.
