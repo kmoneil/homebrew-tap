@@ -18,6 +18,18 @@ $ brew install kmoneil/tap/jr
 $ jr version
 ```
 
+The formula also installs jr's agent skill, written by the binary it installs.
+Homebrew does not write into your home directory, so link it into Claude Code's
+skills once:
+
+```console
+$ mkdir -p ~/.claude/skills
+$ ln -s "$(brew --prefix)/opt/jr/share/jr/skill" ~/.claude/skills/jr
+```
+
+From then on every `brew upgrade` moves the skill with the binary. If
+`~/.claude/skills/jr` is already a directory, remove it first.
+
 This installs the **full** profile. Every release also carries `jr-agent`,
 `jr-reader` and `jr-ci`, which are the same tool with capabilities compiled out
 rather than switched off, and those are fetched as tarballs from

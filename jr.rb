@@ -50,6 +50,24 @@ class Jr < Formula
     # `jr completion <shell>` writes the script to stdout and nothing else, with
     # no result envelope, which is exactly the shape this helper expects.
     generate_completions_from_executable(bin/"jr", "completion")
+
+    # The agent skill, written by the binary just installed, so the skill a
+    # user links always describes the binary they have. `jr skill --dir` writes
+    # SKILL.md and every reference, the bytes `jr skill` prints, so this formula
+    # does not need to know which references there are.
+    system bin/"jr", "skill", "--dir", pkgshare/"skill"
+  end
+
+  def caveats
+    <<~EOS
+      jr's agent skill is installed at:
+        #{opt_pkgshare}/skill
+      Homebrew does not write into your home directory, so link it into
+      Claude Code's skills once, and every upgrade moves it with the binary:
+        mkdir -p ~/.claude/skills
+        ln -s #{opt_pkgshare}/skill ~/.claude/skills/jr
+      If ~/.claude/skills/jr is already a directory, remove it first.
+    EOS
   end
 
   test do
@@ -63,5 +81,10 @@ class Jr < Formula
     # behaviour the tool exists for: the truncation warning goes to stderr,
     # stdout stays parseable, and the exit code says the result was cut short.
     assert_match "auth.login", shell_output("#{bin}/jr schema --limit 3", 3)
+
+    # The installed skill is the one this binary prints, which is the whole
+    # reason it is written at install rather than shipped beside the archive.
+    assert_equal shell_output("#{bin}/jr skill"), (pkgshare/"skill/SKILL.md").read
+    assert_path_exists pkgshare/"skill/references"
   end
 end
