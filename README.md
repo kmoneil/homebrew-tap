@@ -25,15 +25,18 @@ walks through, token and all.
 
 **The skill** is written at install by the binary the formula installs, with
 `jr skill --dir`, so it always describes the binary you have. Homebrew does not
-write into your home directory, so link it into Claude Code's skills once:
+write into your home directory, so link it once, into the cross-agent folder
+(`~/.agents/skills`, read by Codex, Cursor, Gemini CLI and most other loaders)
+and into Claude Code's:
 
 ```console
-$ mkdir -p ~/.claude/skills
+$ mkdir -p ~/.agents/skills ~/.claude/skills
+$ ln -s "$(brew --prefix)/opt/jr/share/jr/skill" ~/.agents/skills/jr
 $ ln -s "$(brew --prefix)/opt/jr/share/jr/skill" ~/.claude/skills/jr
 ```
 
-From then on every `brew upgrade` moves the skill with the binary. If
-`~/.claude/skills/jr` is already a directory, remove it first.
+From then on every `brew upgrade` moves the skill with the binary. If either
+destination is already a directory, remove it first.
 
 **The other profiles.** Every release also carries `jr-agent`, `jr-reader` and
 `jr-ci`, which are the same tool with capabilities compiled out rather than
@@ -44,7 +47,7 @@ Jira, because it does not contain the code that could.
 
 **On Windows**, jr is in [kmoneil/scoop-bucket](https://github.com/kmoneil/scoop-bucket)
 rather than here: `scoop install kmoneil/jr`, with the skill written into
-`~\.claude\skills\jr` for you.
+`~\.agents\skills\jr` and `~\.claude\skills\jr` for you.
 
 Installing through Homebrew also sidesteps macOS Gatekeeper. `brew` fetches with
 `curl`, which never attaches `com.apple.quarantine`, so the released binaries do
