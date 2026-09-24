@@ -60,11 +60,14 @@ class Hunk < Formula
     <<~EOS
       hunk's agent skill is installed at:
         #{opt_pkgshare}/skill
-      Homebrew does not write into your home directory, so link it into
-      Claude Code's skills once, and every upgrade moves it with the binary:
-        mkdir -p ~/.claude/skills
+      Homebrew does not write into your home directory, so link it once into
+      the cross-agent folder (Codex, Cursor, Gemini CLI and most others read
+      it) and into Claude Code's; every upgrade then moves both with the
+      binary:
+        mkdir -p ~/.agents/skills ~/.claude/skills
+        ln -s #{opt_pkgshare}/skill ~/.agents/skills/hunk
         ln -s #{opt_pkgshare}/skill ~/.claude/skills/hunk
-      If ~/.claude/skills/hunk is already a directory, remove it first.
+      If either destination is already a directory, remove it first.
     EOS
   end
 
