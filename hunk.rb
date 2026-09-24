@@ -18,22 +18,29 @@ class Hunk < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/hunk/releases/download/v0.2.7/hunk-darwin-arm64"
-      sha256 "951eb173d2e7f65fc717ef33f5fdcd1212d0b062a4b9092ba76752c33529d89a"
+      url "https://github.com/kmoneil/hunk/releases/download/v0.2.8/hunk-darwin-arm64"
+      sha256 "7f03c06150581de89c1e1352646e3b9eb7a3f877a87ed295ead3d07ccbc40d8f"
     else
-      url "https://github.com/kmoneil/hunk/releases/download/v0.2.7/hunk-darwin-amd64"
-      sha256 "dcb5d17f44ddca179c74a53435eae2d0af7a055d8b62ef7c9ae35dcfbb07a029"
+      url "https://github.com/kmoneil/hunk/releases/download/v0.2.8/hunk-darwin-amd64"
+      sha256 "0df5c901bd2f32eb2cb136ebe2edff7fa7f7f7de9b79913e8b65fd92e9a9c037"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/hunk/releases/download/v0.2.7/hunk-linux-arm64"
-      sha256 "2882d1fd0c65d01cd2f5e244f5c5ad8093b17d5111930e387753f4d7cd6d77f9"
+      url "https://github.com/kmoneil/hunk/releases/download/v0.2.8/hunk-linux-arm64"
+      sha256 "63f4ccd74a9f011a6630b03e9507fad8b058fe997229033146f363c4a0d32f6d"
     else
-      url "https://github.com/kmoneil/hunk/releases/download/v0.2.7/hunk-linux-amd64"
-      sha256 "5ef0af188f1ad0a1e3dc29c5952c1ccb0a226e46ef38ae9ba1dc85479a859620"
+      url "https://github.com/kmoneil/hunk/releases/download/v0.2.8/hunk-linux-amd64"
+      sha256 "c014c8e36249903b989d61e3da90da378a45613ad999e179ee061a8c6420a149"
     end
+  end
+
+  # The agent skill, from the same release as the binary, so the skill a user
+  # has always describes the binary they have.
+  resource "skill" do
+    url "https://github.com/kmoneil/hunk/releases/download/v0.2.8/hunk-skill.tar.gz"
+    sha256 "cace63b86b1f6b3ff8bd4937a9df408175a057414dbbf3034bff14f06679446e"
   end
 
   def install
@@ -45,6 +52,20 @@ class Hunk < Formula
     binary = "hunk-#{os}-#{arch}"
     chmod 0755, binary
     bin.install binary => "hunk"
+
+    resource("skill").stage { (pkgshare/"skill").install "SKILL.md", "references" }
+  end
+
+  def caveats
+    <<~EOS
+      hunk's agent skill is installed at:
+        #{opt_pkgshare}/skill
+      Homebrew does not write into your home directory, so link it into
+      Claude Code's skills once, and every upgrade moves it with the binary:
+        mkdir -p ~/.claude/skills
+        ln -s #{opt_pkgshare}/skill ~/.claude/skills/hunk
+      If ~/.claude/skills/hunk is already a directory, remove it first.
+    EOS
   end
 
   test do
@@ -62,5 +83,7 @@ class Hunk < Formula
 
     pipe_output("#{bin}/hunk", "@@ file greeting.txt\n@@ old\nhello\n@@ new\ngoodbye\n", 0)
     assert_equal "goodbye\n", (testpath/"greeting.txt").read
+
+    assert_path_exists pkgshare/"skill/SKILL.md"
   end
 end
