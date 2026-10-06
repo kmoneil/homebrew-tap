@@ -14,6 +14,12 @@ bytes the manifest names.
 It writes nothing until every check has passed, so a failure leaves the formula
 alone rather than half-edited.
 
+It never moves the formula back. A dispatch can name any tag, and a release
+workflow run again on an old tag sends that tag here, so "the release that was
+announced last" is not "the newest release". A tag older than the one the
+formula names is refused before anything is downloaded. Going back on purpose
+is a hand edit, which is the right cost for it.
+
 bump-jr.py does the same for jr. They are two scripts because the two releases
 name their files differently, and one script that worked out which naming it was
 looking at would be guessing, which is the thing both exist to stop.
@@ -92,6 +98,14 @@ def find_pairs(lines: list[str]) -> list[tuple[int, re.Match[str], int]]:
     return pairs
 
 
+def release(tag: str, where: str) -> tuple[int, int, int]:
+    """vX.Y.Z as three numbers, so that v0.2.10 comes after v0.2.9."""
+    m = re.fullmatch(r"v(\d+)\.(\d+)\.(\d+)", tag)
+    if not m:
+        raise Refused(f"{where} {tag}, which is not a release tag, so which is newer cannot be told")
+    return int(m[1]), int(m[2]), int(m[3])
+
+
 def plan(formula: Path, tag: str, repo: str) -> tuple[str, list[tuple[str, str, str]]]:
     """Work out the new formula text without writing it."""
     lines = formula.read_text().splitlines(keepends=True)
@@ -115,6 +129,16 @@ def plan(formula: Path, tag: str, repo: str) -> tuple[str, list[tuple[str, str, 
         if url["asset"] in seen:
             raise Refused(f"{url['asset']} is named twice")
         seen.add(url["asset"])
+
+    # Before anything is fetched: a downgrade is refused for what it is, not
+    # for whatever the old release happens to be missing.
+    wanted = release(tag, "the tag to bump to is")
+    for line_no, url, _ in pairs:
+        if release(url["tag"], f"line {line_no + 1} points at") > wanted:
+            raise Refused(
+                f"{formula.name} points at {url['tag']}, which is newer than {tag}. "
+                "A bump never moves a formula back; to go back on purpose, edit it by hand"
+            )
 
     base = f"https://github.com/{repo}/releases/download/{tag}"
     published = read_checksums(fetch(f"{base}/SHA256SUMS").decode())

@@ -51,6 +51,13 @@ bytes, so a digest that lands beside the wrong URL fails a test rather than
 matching by accident. The workflow that calls it is
 `.github/workflows/bump-hunk.yml`.
 
+It also refuses to move the formula back. A tag older than the one `hunk.rb`
+names is refused before anything is downloaded, compared as numbers, so
+`v0.2.10` follows `v0.2.9`. The tag it already names is still the no-op above.
+A dispatch can carry any tag, and a release run again on an old tag sends
+that tag, so "the last one announced" is not "the newest". Going back on
+purpose is a hand edit.
+
 ## `verify-provenance.py`
 
 Checks that every file a formula names was built by the release workflow it
