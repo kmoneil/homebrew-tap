@@ -32,4 +32,6 @@ jobs:
     with:
       formula: hunk
       repo: kmoneil/hunk
+      # hunk's release attests every asset it publishes, from v0.3.8 on.
+      attested-by: kmoneil/hunk/.github/workflows/release.yml
       tag: ${{ github.event.inputs.tag || github.event.client_payload.tag }}

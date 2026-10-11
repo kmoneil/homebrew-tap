@@ -53,15 +53,18 @@ class Refused(Exception):
     """A check failed. The formula is not written."""
 
 
-def fetch(url: str) -> bytes:
-    """Read a URL. A release asset is public: no token."""
+def fetch(url: str, dest: Path | None = None) -> bytes:
+    """Read a URL, saving it when asked. A release asset is public: no token."""
     try:
         with urllib.request.urlopen(url) as response:  # noqa: S310 - https, fixed host
-            return response.read()
+            data = response.read()
     except urllib.error.HTTPError as err:
         raise Refused(f"{url} answered {err.code} {err.reason}") from err
     except urllib.error.URLError as err:
         raise Refused(f"{url} could not be reached: {err.reason}") from err
+    if dest is not None:
+        dest.write_bytes(data)
+    return data
 
 
 def read_checksums(text: str) -> dict[str, str]:
@@ -143,6 +146,11 @@ def plan(formula: Path, tag: str, repo: str) -> tuple[str, list[tuple[str, str, 
     base = f"https://github.com/{repo}/releases/download/{tag}"
     published = read_checksums(fetch(f"{base}/SHA256SUMS").decode())
 
+    # Saved, not only hashed: verify-provenance.py asks gh about these copies,
+    # the same bytes the digests below were derived from.
+    downloads = Path(os.environ.get("HUNK_DOWNLOAD_DIR", "dist"))
+    downloads.mkdir(parents=True, exist_ok=True)
+
     changed: list[tuple[str, str, str]] = []
     for line_no, url, sha_no in pairs:
         asset = url["asset"]
@@ -150,7 +158,7 @@ def plan(formula: Path, tag: str, repo: str) -> tuple[str, list[tuple[str, str, 
             raise Refused(f"{tag} publishes no {asset}")
         want = published[asset]
         new_url = f"{base}/{asset}"
-        got = hashlib.sha256(fetch(new_url)).hexdigest()
+        got = hashlib.sha256(fetch(new_url, downloads / asset)).hexdigest()
         if got != want:
             # The manifest and the bytes behind the URL disagree. Whichever is
             # wrong, the formula must carry neither.
