@@ -22,21 +22,21 @@ class Jr < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/jr/releases/download/v0.19.8/jr-full_0.19.8_darwin_arm64.tar.gz"
-      sha256 "8e993e417c373257a7cf0b5c216cc32219d40ba232d3450b85dec0fe0d3bba51"
+      url "https://github.com/kmoneil/jr/releases/download/v0.20.0/jr-full_0.20.0_darwin_arm64.tar.gz"
+      sha256 "7df5d14abe5d3b5c949c3b44a87b26c6d97a29b3658a4499253b7d9ce28c7924"
     else
-      url "https://github.com/kmoneil/jr/releases/download/v0.19.8/jr-full_0.19.8_darwin_amd64.tar.gz"
-      sha256 "516da4c96e3792390b6cd9272d05d0f442a00a47bef42a98211708e43f85708e"
+      url "https://github.com/kmoneil/jr/releases/download/v0.20.0/jr-full_0.20.0_darwin_amd64.tar.gz"
+      sha256 "be960f12d322e89d0e4720cb5943c2d6f867e8e1c892683db506dbe29eb57edf"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/jr/releases/download/v0.19.8/jr-full_0.19.8_linux_arm64.tar.gz"
-      sha256 "5165dc7ac83f1072ffc2a99598d1ce7a9f3387356747a6211275911f5738790b"
+      url "https://github.com/kmoneil/jr/releases/download/v0.20.0/jr-full_0.20.0_linux_arm64.tar.gz"
+      sha256 "f6652d225123fd7c6c35b2502583e615c94929587c3d7efbb9aa4e85cd4cfdee"
     else
-      url "https://github.com/kmoneil/jr/releases/download/v0.19.8/jr-full_0.19.8_linux_amd64.tar.gz"
-      sha256 "316e13414c14a245c0842c008d5529f5c1f70962247498f8b69ea8a99c92dd23"
+      url "https://github.com/kmoneil/jr/releases/download/v0.20.0/jr-full_0.20.0_linux_amd64.tar.gz"
+      sha256 "824395c7b2f8b7e74f3f903562b9b850679a1e46b42f30c6f61fc4f908f241a1"
     end
   end
 
