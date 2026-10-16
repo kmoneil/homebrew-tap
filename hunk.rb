@@ -18,29 +18,29 @@ class Hunk < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/hunk/releases/download/v0.3.13/hunk-darwin-arm64"
-      sha256 "9da13ffe29f1cc79e739a2bef4bb46138cadb8c0a3ccfdf7705f2805ea6c07aa"
+      url "https://github.com/kmoneil/hunk/releases/download/v0.3.14/hunk-darwin-arm64"
+      sha256 "852581a7b7ecde643df1368ff1426bca38bb4cb8936af9a892253001888e8fca"
     else
-      url "https://github.com/kmoneil/hunk/releases/download/v0.3.13/hunk-darwin-amd64"
-      sha256 "5b2f78c7188423117773d5c5e2e17db4f31b58f72055f79008b2fade630753d3"
+      url "https://github.com/kmoneil/hunk/releases/download/v0.3.14/hunk-darwin-amd64"
+      sha256 "b0a4b13e8c4e8fb155e2e342016210b7d4a18861fd6c0f6a92cbeea8eed74eed"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/hunk/releases/download/v0.3.13/hunk-linux-arm64"
-      sha256 "c24079cd85346b9b8f45612da93a54c4f3eaf783493ebf86ea06dc9cda0edf24"
+      url "https://github.com/kmoneil/hunk/releases/download/v0.3.14/hunk-linux-arm64"
+      sha256 "262db498e935d948f737068251e7817d7a2eff743536242f6ae68e7866d8fb26"
     else
-      url "https://github.com/kmoneil/hunk/releases/download/v0.3.13/hunk-linux-amd64"
-      sha256 "2836201f9af314b110fc68cf736b54e496887c5a43a70f76952161db9de9c80a"
+      url "https://github.com/kmoneil/hunk/releases/download/v0.3.14/hunk-linux-amd64"
+      sha256 "9ba628f9d72243cf84dfed3b4217f388e587f2c9440747f3c30c1031f7976dfe"
     end
   end
 
   # The agent skill, from the same release as the binary, so the skill a user
   # has always describes the binary they have.
   resource "skill" do
-    url "https://github.com/kmoneil/hunk/releases/download/v0.3.13/hunk-skill.tar.gz"
-    sha256 "3909ee9dfc02c0dc10678cbe32c1b038935e3a0234b4426be635918a4206d74e"
+    url "https://github.com/kmoneil/hunk/releases/download/v0.3.14/hunk-skill.tar.gz"
+    sha256 "35acfc88d49d98cfff46851260b4e02fc0668b2b2c7557121abe2ea613d4b635"
   end
 
   def install
