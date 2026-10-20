@@ -58,6 +58,21 @@ A dispatch can carry any tag, and a release run again on an old tag sends
 that tag, so "the last one announced" is not "the newest". Going back on
 purpose is a hand edit.
 
+## `bump-zigvet.py`
+
+Points `zigvet.rb` at a `kmoneil/zigvet` release: a binary for each of four
+platforms, four URLs and four `sha256` lines, and nothing else in the file.
+
+```console
+$ python3 .github/scripts/bump-zigvet.py --tag v0.1.0
+$ python3 .github/scripts/bump-zigvet.py --tag v0.1.0 --check   # say, write nothing
+```
+
+It is `bump-hunk.py` without the skill: the same refusals against the
+release's `SHA256SUMS`, the same refusal to move the formula back, and
+`test_bump_zigvet.py` serves each file different bytes in the same way. The
+workflow that calls it is `.github/workflows/bump-zigvet.yml`.
+
 ## `verify-provenance.py`
 
 Checks that every file a formula names was built by the release workflow it
@@ -74,9 +89,10 @@ $ python3 .github/scripts/verify-provenance.py --formula jr.rb --repo kmoneil/jr
     --workflow kmoneil/jr/.github/workflows/release.yml --tag v0.17.0
 ```
 
-It runs when a formula's bump workflow names `attested-by`, which `bump-jr.yml`
-does and `bump-hunk.yml` does not, because hunk's release publishes no
-attestations. A formula naming no release file, or naming a file the bump did not
+It runs when a formula's bump workflow names `attested-by`, which every one
+does: `bump-jr.yml`, `bump-hunk.yml` (hunk's releases attest their files from
+v0.3.8 on) and `bump-zigvet.yml`. A formula naming no release file, or naming a
+file the bump did not
 download, is refused rather than passed. `test_verify_provenance.py` holds what
 it asks gh and what it refuses. gh's own answers were checked against a real jr
 release, where a tampered archive, the wrong tag and the wrong workflow each
