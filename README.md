@@ -84,6 +84,22 @@ From then on every `brew upgrade` moves the skill with the binary. If
 `~/.claude/skills/hunk` is already a directory, from `make install` in a clone,
 remove it first.
 
+### `zigvet`
+
+Things Zig compiles that are wrong: code the Zig compiler accepts in every
+build mode that is almost certainly a bug, such as a pointer into stack memory
+that outlives the function that made it.
+[kmoneil/zigvet](https://github.com/kmoneil/zigvet).
+
+```console
+$ brew install kmoneil/tap/zigvet
+$ zigvet --version
+```
+
+It installs one binary, the release's own for your platform. To run zigvet
+as a `zig build lint` step instead, a project fetches it as a Zig package;
+its README has [the step](https://github.com/kmoneil/zigvet#use-it-in-a-build).
+
 ### `gcp-cli`
 
 An LLM-native Google Cloud CLI. [kmoneil/gcp-cli](https://github.com/kmoneil/gcp-cli).
@@ -94,15 +110,16 @@ $ brew install kmoneil/tap/gcp-cli
 
 ## How it stays current
 
-Each jr and hunk release tells this repository that it exists, with a
-`jr-released` or `hunk-released` dispatch, and `bump-jr.yml` or `bump-hunk.yml`
-runs the jobs every formula shares, in `bump-formula.yml`:
+Each jr, hunk and zigvet release tells this repository that it exists, with a
+`jr-released`, `hunk-released` or `zigvet-released` dispatch, and that
+formula's `bump-*.yml` runs the jobs every formula shares, in
+`bump-formula.yml`:
 
 1. rewrite the formula's URLs and digests, reading each digest from the
    release's own manifest and re-deriving it from the file downloaded from the
    URL the formula will carry;
-2. for jr, verify that every archive carries build provenance from jr's release
-   workflow, built from the tag, on a runner GitHub hosts;
+2. verify that every file the formula names carries build provenance from its
+   release workflow, built from the tag, on a runner GitHub hosts;
 3. commit that to a branch, and audit, install and test the branch on a macOS
    runner, where the installed binary has to report the version asked for;
 4. only then fast-forward `main`.

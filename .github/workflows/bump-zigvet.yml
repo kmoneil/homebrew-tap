@@ -1,0 +1,36 @@
+name: bump zigvet
+
+# Point zigvet.rb at a zigvet release: four binaries, and the digest of each.
+#
+# The release workflow in kmoneil/zigvet sends `zigvet-released` here once the
+# binaries and SHA256SUMS are published. The jobs that rewrite,
+# verify and land the formula are in bump-formula.yml, shared by every formula
+# this tap keeps current; this says when to run them, and for which.
+
+on:
+  repository_dispatch:
+    types: [zigvet-released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: the zigvet release to point at, such as v0.1.0
+        required: true
+
+permissions:
+  contents: write
+
+# As in bump-jr.yml: two releases in quick succession queue rather than race,
+# and the group is zigvet's alone.
+concurrency:
+  group: bump-zigvet
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    uses: ./.github/workflows/bump-formula.yml
+    with:
+      formula: zigvet
+      repo: kmoneil/zigvet
+      # zigvet's release attests every asset it publishes, from v0.1.0, its first.
+      attested-by: kmoneil/zigvet/.github/workflows/release.yml
+      tag: ${{ github.event.inputs.tag || github.event.client_payload.tag }}
