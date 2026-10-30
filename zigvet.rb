@@ -14,21 +14,21 @@ class Zigvet < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/zigvet/releases/download/v0.18.0/zigvet-darwin-arm64"
-      sha256 "5be420407513baeb94bbdf1bf26045642cc6b3be859e3a952e7e8c65eab30385"
+      url "https://github.com/kmoneil/zigvet/releases/download/v0.19.0/zigvet-darwin-arm64"
+      sha256 "5c2a66c6554adfe6a9595f2bdf7e50d78f47a9fb965e452fea75c59206c8b933"
     else
-      url "https://github.com/kmoneil/zigvet/releases/download/v0.18.0/zigvet-darwin-amd64"
-      sha256 "223af7a1cbae2556940bf44d75cc6b9f0dcd74f4ac932eb5529e2ffec89886d2"
+      url "https://github.com/kmoneil/zigvet/releases/download/v0.19.0/zigvet-darwin-amd64"
+      sha256 "3a5ee4e0c488ab3b629073be74cf4c6f5cf7114d2d4f64389c4b92ce451038cc"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/zigvet/releases/download/v0.18.0/zigvet-linux-arm64"
-      sha256 "f51aca67fdeb7c92cecd11d755ca30219a830efc35efb9a233fbe324094fe5ea"
+      url "https://github.com/kmoneil/zigvet/releases/download/v0.19.0/zigvet-linux-arm64"
+      sha256 "2c90489be5e8995a98a54efedfc847ff53eb37f3a40ec14a4b2f506423a057e3"
     else
-      url "https://github.com/kmoneil/zigvet/releases/download/v0.18.0/zigvet-linux-amd64"
-      sha256 "9481c38b401c00f1d83e48cda5e65a1dae073e1bf8d2c8c694a3a3003d970b59"
+      url "https://github.com/kmoneil/zigvet/releases/download/v0.19.0/zigvet-linux-amd64"
+      sha256 "7054c5d7f9525e4a11d21fa94dd226f108d284565bd0f74b36dd71970a80fa74"
     end
   end
 
