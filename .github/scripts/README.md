@@ -73,6 +73,21 @@ release's `SHA256SUMS`, the same refusal to move the formula back, and
 `test_bump_zigvet.py` serves each file different bytes in the same way. The
 workflow that calls it is `.github/workflows/bump-zigvet.yml`.
 
+## `bump-gnarl.py`
+
+Points `gnarl.rb` at a `kmoneil/gnarl` release: a binary for each of four
+platforms, four URLs and four `sha256` lines, and nothing else in the file.
+
+```console
+$ python3 .github/scripts/bump-gnarl.py --tag v0.1.0
+$ python3 .github/scripts/bump-gnarl.py --tag v0.1.0 --check   # say, write nothing
+```
+
+It is `bump-zigvet.py` with gnarl's names: the same refusals against the
+release's `SHA256SUMS`, the same refusal to move the formula back, and
+`test_bump_gnarl.py` serves each file different bytes in the same way. The
+workflow that calls it is `.github/workflows/bump-gnarl.yml`.
+
 ## `verify-provenance.py`
 
 Checks that every file a formula names was built by the release workflow it
@@ -91,7 +106,7 @@ $ python3 .github/scripts/verify-provenance.py --formula jr.rb --repo kmoneil/jr
 
 It runs when a formula's bump workflow names `attested-by`, which every one
 does: `bump-jr.yml`, `bump-hunk.yml` (hunk's releases attest their files from
-v0.3.8 on) and `bump-zigvet.yml`. A formula naming no release file, or naming a
+v0.3.8 on), `bump-zigvet.yml` and `bump-gnarl.yml`. A formula naming no release file, or naming a
 file the bump did not
 download, is refused rather than passed. `test_verify_provenance.py` holds what
 it asks gh and what it refuses. gh's own answers were checked against a real jr

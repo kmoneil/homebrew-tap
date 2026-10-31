@@ -100,6 +100,22 @@ It installs one binary, the release's own for your platform. To run zigvet
 as a `zig build lint` step instead, a project fetches it as a Zig package;
 its README has [the step](https://github.com/kmoneil/zigvet#use-it-in-a-build).
 
+### `gnarl`
+
+Per-function complexity for Zig: cyclomatic and cognitive complexity, logical
+lines, nesting and parameters, each explained construct by construct, with the
+lines worth lifting out and a `--check` that holds the line in CI.
+[kmoneil/gnarl](https://github.com/kmoneil/gnarl).
+
+```console
+$ brew install kmoneil/tap/gnarl
+$ gnarl --version
+```
+
+It installs one binary, the release's own for your platform. `gnarl skill`
+prints the guide an AI agent needs to use it, and `gnarl skill --install <dir>`
+writes it where the agent reads skills.
+
 ### `gcp-cli`
 
 An LLM-native Google Cloud CLI. [kmoneil/gcp-cli](https://github.com/kmoneil/gcp-cli).
@@ -110,8 +126,9 @@ $ brew install kmoneil/tap/gcp-cli
 
 ## How it stays current
 
-Each jr, hunk and zigvet release tells this repository that it exists, with a
-`jr-released`, `hunk-released` or `zigvet-released` dispatch, and that
+Each jr, hunk, zigvet and gnarl release tells this repository that it exists,
+with a `jr-released`, `hunk-released`, `zigvet-released` or `gnarl-released`
+dispatch, and that
 formula's `bump-*.yml` runs the jobs every formula shares, in
 `bump-formula.yml`:
 
