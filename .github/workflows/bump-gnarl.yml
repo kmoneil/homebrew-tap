@@ -1,0 +1,36 @@
+name: bump gnarl
+
+# Point gnarl.rb at a gnarl release: four binaries, and the digest of each.
+#
+# The release workflow in kmoneil/gnarl sends `gnarl-released` here once the
+# binaries and SHA256SUMS are published. The jobs that rewrite,
+# verify and land the formula are in bump-formula.yml, shared by every formula
+# this tap keeps current; this says when to run them, and for which.
+
+on:
+  repository_dispatch:
+    types: [gnarl-released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: the gnarl release to point at, such as v0.1.0
+        required: true
+
+permissions:
+  contents: write
+
+# As in bump-jr.yml: two releases in quick succession queue rather than race,
+# and the group is gnarl's alone.
+concurrency:
+  group: bump-gnarl
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    uses: ./.github/workflows/bump-formula.yml
+    with:
+      formula: gnarl
+      repo: kmoneil/gnarl
+      # gnarl's release attests every asset it publishes, from v0.1.0, its first.
+      attested-by: kmoneil/gnarl/.github/workflows/release.yml
+      tag: ${{ github.event.inputs.tag || github.event.client_payload.tag }}

@@ -5,8 +5,9 @@ name: bump a formula
 # These are the three jobs. Each formula this tap keeps current has a short
 # workflow of its own, bump-<formula>.yml, that says when to run them and for
 # which formula: bump-jr.yml on `jr-released` from kmoneil/jr,
-# bump-hunk.yml on `hunk-released` from kmoneil/hunk, and bump-zigvet.yml on
-# `zigvet-released` from kmoneil/zigvet. They lived in
+# bump-hunk.yml on `hunk-released` from kmoneil/hunk, bump-zigvet.yml on
+# `zigvet-released` from kmoneil/zigvet, and bump-gnarl.yml on
+# `gnarl-released` from kmoneil/gnarl. They lived in
 # bump-jr.yml until a second formula needed them, and moved here so that the
 # fixes they carry exist once rather than once per formula. Nothing reaches
 # main that has not been installed and run first.
