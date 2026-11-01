@@ -14,21 +14,21 @@ class Gnarl < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/gnarl/releases/download/v0.3.1/gnarl-darwin-arm64"
-      sha256 "a32ca2882e25154d18b3a5ffc7168beb5364d364294339ca63ff56bea784e162"
+      url "https://github.com/kmoneil/gnarl/releases/download/v0.4.0/gnarl-darwin-arm64"
+      sha256 "1bae2c228f4a61df02789eaf06dd927d91be2f0f4004e3aa4ac98aabbfb047ef"
     else
-      url "https://github.com/kmoneil/gnarl/releases/download/v0.3.1/gnarl-darwin-amd64"
-      sha256 "01cd21d3a0b7bd902fd93959eb3117284282049099dc6b6ccb959668f631dd4f"
+      url "https://github.com/kmoneil/gnarl/releases/download/v0.4.0/gnarl-darwin-amd64"
+      sha256 "0981ed7d15e0abe4bbc6f589332721fbb4ab04a031037fabdb8550315c29fe7c"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/gnarl/releases/download/v0.3.1/gnarl-linux-arm64"
-      sha256 "75241f2986283f486757183f4b75b0733b1fb51a86b101bee6e6c32f2e7eecae"
+      url "https://github.com/kmoneil/gnarl/releases/download/v0.4.0/gnarl-linux-arm64"
+      sha256 "b78212d80def589cef42249902d98a1389409c811b8a681a93c3da4bebe18dee"
     else
-      url "https://github.com/kmoneil/gnarl/releases/download/v0.3.1/gnarl-linux-amd64"
-      sha256 "7e47113d7506176fa83bc544139654b8f900050b1c37483d5043de07ffe74db6"
+      url "https://github.com/kmoneil/gnarl/releases/download/v0.4.0/gnarl-linux-amd64"
+      sha256 "e18abdd2c6bbeb7ab386c07c201e060c462b41d88f741e29a01b2c922a13139f"
     end
   end
 
