@@ -57,8 +57,10 @@ class Gnarl < Formula
           return 0;
       }
     ZIG
+    # Its `over` column is empty, for it is within every limit; gnarl may
+    # add columns after it, so the row is not matched to its end.
     output = shell_output("#{bin}/gnarl --all --format tsv #{testpath}/pick.zig")
-    assert_match(/\tpick\tfn\tnormal\t3\t2\t3\t1\t2\t2\t$/, output)
+    assert_match(/\tpick\tfn\tnormal\t3\t2\t3\t1\t2\t2\t(\t|$)/, output)
 
     # And the gate: sixteen ifs are cyclomatic 17, over the critical limit of
     # 15, so --check fails and says so.
