@@ -11,7 +11,7 @@ name: brew
 # be able to disagree about what an acceptable formula is.
 #
 # Scoped on purpose to the formulae a bump workflow keeps current: jr, hunk,
-# zigvet and gnarl.
+# zigvet, gnarl and yaml.
 # gcp-cli.rb predates this workflow and has never been audited; adding it to
 # the matrix is a separate change, so that a red run here always means
 # somebody broke a formula that is meant to be working.
@@ -33,7 +33,7 @@ jobs:
       # One formula's failure says nothing about another's.
       fail-fast: false
       matrix:
-        formula: [jr, hunk, zigvet, gnarl]
+        formula: [jr, hunk, zigvet, gnarl, yaml]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/verify-formula
