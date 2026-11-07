@@ -116,6 +116,22 @@ It installs one binary, the release's own for your platform. `gnarl skill`
 prints the guide an AI agent needs to use it, and `gnarl skill --install <dir>`
 writes it where the agent reads skills.
 
+### `yaml`
+
+Check YAML files with the line and column of each error, read a value out of
+one by path, and convert YAML to JSON and back, with the yaml.zig library: all
+of YAML 1.2.2, safe on files you did not write.
+[kmoneil/yaml.zig](https://github.com/kmoneil/yaml.zig).
+
+```console
+$ brew install kmoneil/tap/yaml
+$ yaml --version
+```
+
+It installs one binary, the release's own for your platform. `yaml skill`
+prints the guide an AI agent needs to use it, and `yaml skill --install <dir>`
+writes it where the agent reads skills.
+
 ### `gcp-cli`
 
 An LLM-native Google Cloud CLI. [kmoneil/gcp-cli](https://github.com/kmoneil/gcp-cli).
@@ -126,9 +142,9 @@ $ brew install kmoneil/tap/gcp-cli
 
 ## How it stays current
 
-Each jr, hunk, zigvet and gnarl release tells this repository that it exists,
-with a `jr-released`, `hunk-released`, `zigvet-released` or `gnarl-released`
-dispatch, and that
+Each jr, hunk, zigvet, gnarl and yaml release tells this repository that it
+exists, with a `jr-released`, `hunk-released`, `zigvet-released`,
+`gnarl-released` or `yaml-released` dispatch, and that
 formula's `bump-*.yml` runs the jobs every formula shares, in
 `bump-formula.yml`:
 

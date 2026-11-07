@@ -55,7 +55,7 @@ runs:
       shell: bash
       run: |
         case '${{ inputs.formula }}' in
-          jr|hunk|zigvet|gnarl) echo "verifying ${{ inputs.formula }}.rb" ;;
+          jr|hunk|zigvet|gnarl|yaml) echo "verifying ${{ inputs.formula }}.rb" ;;
           *)
             echo "'${{ inputs.formula }}' is not a formula this action knows how to verify" >&2
             exit 1
@@ -141,6 +141,10 @@ runs:
             gnarl --version
             gnarl --help > /dev/null
             ;;
+          yaml)
+            yaml --version
+            yaml --help > /dev/null
+            ;;
         esac
 
     - name: the binary is the version the caller asked for
@@ -158,6 +162,7 @@ runs:
           hunk) got=$(hunk --version | sed -n 's/^hunk v//p') ;;
           zigvet) got=$(zigvet --version | sed -n 's/^zigvet //p') ;;
           gnarl) got=$(gnarl --version | sed -n 's/^gnarl //p') ;;
+          yaml) got=$(yaml --version | sed -n 's/^yaml //p') ;;
         esac
         printf 'expected %s, installed %s\n' "$want" "$got"
         [ "$want" = "$got" ] || {
