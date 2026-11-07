@@ -14,21 +14,21 @@ class Yaml < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/yaml.zig/releases/download/v0.1.0/yaml-darwin-arm64"
-      sha256 "be9134dd38f4f66098b3615fd37c8914b798887af7994cae0183792601e939dd"
+      url "https://github.com/kmoneil/yaml.zig/releases/download/v0.2.0/yaml-darwin-arm64"
+      sha256 "eacdfc217d819d191a065ad3e4432a30a0b7a0232cdf0b6d38d003a57ae5f528"
     else
-      url "https://github.com/kmoneil/yaml.zig/releases/download/v0.1.0/yaml-darwin-amd64"
-      sha256 "d39d7dc9f05e0709df7ea6d4b75e60c35ac424fa95a564bbb79963a195a44b6f"
+      url "https://github.com/kmoneil/yaml.zig/releases/download/v0.2.0/yaml-darwin-amd64"
+      sha256 "f18b8f52b2691815e538f5a5c27b713dddb32d53a55c991edfa685d70f3211a8"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/kmoneil/yaml.zig/releases/download/v0.1.0/yaml-linux-arm64"
-      sha256 "a2d8f8bda9464724b014ad8b57b55e1717b571c57bdadfbaaabe1953149abbbf"
+      url "https://github.com/kmoneil/yaml.zig/releases/download/v0.2.0/yaml-linux-arm64"
+      sha256 "d4a1a27232be100956709704fda67602c674c0a625d2002369a5daced1422f2d"
     else
-      url "https://github.com/kmoneil/yaml.zig/releases/download/v0.1.0/yaml-linux-amd64"
-      sha256 "141cf0879c151e957e3a2197705934550da6c0187d1e6de2a6e5743db80299f0"
+      url "https://github.com/kmoneil/yaml.zig/releases/download/v0.2.0/yaml-linux-amd64"
+      sha256 "f042fde96cb3234cd1641022374c7f57763f8be833407684a1ba6e82a1f8c86b"
     end
   end
 
