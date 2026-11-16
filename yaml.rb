@@ -41,6 +41,28 @@ class Yaml < Formula
     binary = "yaml-#{os}-#{arch}"
     chmod 0755, binary
     bin.install binary => "yaml"
+
+    # The agent skill, written by the binary just installed, so the skill a
+    # user links always describes the binary they have. `yaml skill --install`
+    # writes <dir>/yaml/SKILL.md: the skill's frontmatter and a line that has
+    # the agent run `yaml skill` for the guide itself.
+    system bin/"yaml", "skill", "--install", buildpath/"agent"
+    (pkgshare/"skill").install buildpath/"agent/yaml/SKILL.md"
+  end
+
+  def caveats
+    <<~EOS
+      yaml's agent skill is installed at:
+        #{opt_pkgshare}/skill
+      Homebrew does not write into your home directory, so link it once into
+      the cross-agent folder (Codex, Cursor, Gemini CLI and most others read
+      it) and into Claude Code's; every upgrade then moves both with the
+      binary:
+        mkdir -p ~/.agents/skills ~/.claude/skills
+        ln -s #{opt_pkgshare}/skill ~/.agents/skills/yaml
+        ln -s #{opt_pkgshare}/skill ~/.claude/skills/yaml
+      If either destination is already a directory, remove it first.
+    EOS
   end
 
   test do
@@ -59,5 +81,13 @@ class Yaml < Formula
     (testpath/"dup.yaml").write "a: 1\na: 2\n"
     output = shell_output("#{bin}/yaml check #{testpath}/dup.yaml 2>&1", 1)
     assert_match "a mapping cannot have two equal keys", output
+
+    # The skill: `yaml skill --install` writes one named yaml, and the one this
+    # formula installed is what this binary writes. The release workflow in
+    # kmoneil/yaml.zig checks the first half; the second needs the formula.
+    assert_equal "wrote #{testpath}/yaml/SKILL.md",
+                 shell_output("#{bin}/yaml skill --install #{testpath}").chomp
+    assert_equal "name: yaml", (testpath/"yaml/SKILL.md").readlines[1].chomp
+    assert_equal (testpath/"yaml/SKILL.md").read, (pkgshare/"skill/SKILL.md").read
   end
 end

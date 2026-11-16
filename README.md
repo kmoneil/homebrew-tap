@@ -128,9 +128,25 @@ $ brew install kmoneil/tap/yaml
 $ yaml --version
 ```
 
-It installs one binary, the release's own for your platform. `yaml skill`
-prints the guide an AI agent needs to use it, and `yaml skill --install <dir>`
-writes it where the agent reads skills.
+It installs two things: the release's own binary for your platform, and its
+agent skill.
+
+**The skill** is written at install by the binary the formula installs, with
+`yaml skill --install`, so it always describes the binary you have. It is a
+short `SKILL.md` that has the agent run `yaml skill` for the guide itself.
+Homebrew does not write into your home directory, so link it once, into the
+cross-agent folder (`~/.agents/skills`, read by Codex, Cursor, Gemini CLI and
+most other loaders) and into Claude Code's:
+
+```console
+$ mkdir -p ~/.agents/skills ~/.claude/skills
+$ ln -s "$(brew --prefix)/opt/yaml/share/yaml/skill" ~/.agents/skills/yaml
+$ ln -s "$(brew --prefix)/opt/yaml/share/yaml/skill" ~/.claude/skills/yaml
+```
+
+From then on every `brew upgrade` moves the skill with the binary. If either
+destination is already a directory, from an earlier `yaml skill --install`,
+remove it first.
 
 ### `gcp-cli`
 
