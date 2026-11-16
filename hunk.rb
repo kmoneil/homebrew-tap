@@ -63,11 +63,14 @@ class Hunk < Formula
       Homebrew does not write into your home directory, so link it once into
       the cross-agent folder (Codex, Cursor, Gemini CLI and most others read
       it) and into Claude Code's; every upgrade then moves both with the
-      binary:
+      binary. The rm clears what an earlier install left there, since ln -s
+      onto a folder puts the link inside it and says nothing:
         mkdir -p ~/.agents/skills ~/.claude/skills
+        rm -rf ~/.agents/skills/hunk ~/.claude/skills/hunk
         ln -s #{opt_pkgshare}/skill ~/.agents/skills/hunk
         ln -s #{opt_pkgshare}/skill ~/.claude/skills/hunk
-      If either destination is already a directory, remove it first.
+      Then readlink ~/.claude/skills/hunk prints the path above; if it prints
+      nothing, the link is not there.
     EOS
   end
 

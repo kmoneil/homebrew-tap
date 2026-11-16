@@ -31,12 +31,18 @@ and into Claude Code's:
 
 ```console
 $ mkdir -p ~/.agents/skills ~/.claude/skills
+$ rm -rf ~/.agents/skills/jr ~/.claude/skills/jr
 $ ln -s "$(brew --prefix)/opt/jr/share/jr/skill" ~/.agents/skills/jr
 $ ln -s "$(brew --prefix)/opt/jr/share/jr/skill" ~/.claude/skills/jr
+$ readlink ~/.claude/skills/jr
+/opt/homebrew/opt/jr/share/jr/skill
 ```
 
-From then on every `brew upgrade` moves the skill with the binary. If either
-destination is already a directory, remove it first.
+The `rm` clears what an earlier install left there, a folder from
+`jr skill --dir` or a copy: `ln -s` onto a folder puts the link inside it and
+says nothing. `readlink` prints the skill's path under your Homebrew prefix;
+if it prints nothing, the link is not there. From then on every `brew upgrade`
+moves the skill with the binary.
 
 **The other profiles.** Every release also carries `jr-agent`, `jr-reader` and
 `jr-ci`, which are the same tool with capabilities compiled out rather than
@@ -72,17 +78,24 @@ called `hunk`, a diff viewer, and `brew install hunk` installs that one. The two
 cannot be installed at once.
 
 The formula also installs hunk's agent skill, from the same release as the
-binary. Homebrew does not write into your home directory, so link it into
-Claude Code's skills once:
+binary. Homebrew does not write into your home directory, so link it once,
+into the cross-agent folder (`~/.agents/skills`, read by Codex, Cursor, Gemini
+CLI and most other loaders) and into Claude Code's:
 
 ```console
-$ mkdir -p ~/.claude/skills
+$ mkdir -p ~/.agents/skills ~/.claude/skills
+$ rm -rf ~/.agents/skills/hunk ~/.claude/skills/hunk
+$ ln -s "$(brew --prefix)/opt/hunk/share/hunk/skill" ~/.agents/skills/hunk
 $ ln -s "$(brew --prefix)/opt/hunk/share/hunk/skill" ~/.claude/skills/hunk
+$ readlink ~/.claude/skills/hunk
+/opt/homebrew/opt/hunk/share/hunk/skill
 ```
 
-From then on every `brew upgrade` moves the skill with the binary. If
-`~/.claude/skills/hunk` is already a directory, from `make install` in a clone,
-remove it first.
+The `rm` clears what an earlier install left there, a folder from
+`make install` in a clone: `ln -s` onto a folder puts the link inside it and
+says nothing. `readlink` prints the skill's path under your Homebrew prefix;
+if it prints nothing, the link is not there. From then on every `brew upgrade`
+moves the skill with the binary.
 
 ### `zigvet`
 
@@ -140,13 +153,18 @@ most other loaders) and into Claude Code's:
 
 ```console
 $ mkdir -p ~/.agents/skills ~/.claude/skills
+$ rm -rf ~/.agents/skills/yaml ~/.claude/skills/yaml
 $ ln -s "$(brew --prefix)/opt/yaml/share/yaml/skill" ~/.agents/skills/yaml
 $ ln -s "$(brew --prefix)/opt/yaml/share/yaml/skill" ~/.claude/skills/yaml
+$ readlink ~/.claude/skills/yaml
+/opt/homebrew/opt/yaml/share/yaml/skill
 ```
 
-From then on every `brew upgrade` moves the skill with the binary. If either
-destination is already a directory, from an earlier `yaml skill --install`,
-remove it first.
+The `rm` clears what an earlier install left there, a folder from
+`yaml skill --install`: `ln -s` onto a folder puts the link inside it and says
+nothing. `readlink` prints the skill's path under your Homebrew prefix; if it
+prints nothing, the link is not there. From then on every `brew upgrade` moves
+the skill with the binary.
 
 ### `gcp-cli`
 
